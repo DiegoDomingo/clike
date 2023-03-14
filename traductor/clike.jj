@@ -1,0 +1,671 @@
+//*****************************************************************
+// File:   clike.jj
+// Author: Procesadores de Lenguajes-University of Zaragoza
+//         Pablo Cervera López (815538)
+//         Diego Domingo Ralla (818637)
+// Date:   Marzo 2023
+// Coms:   compilar mediante "ant"
+//*****************************************************************
+
+options {
+ 	IGNORE_CASE = false;
+ 	COMMON_TOKEN_ACTION = true;
+ 	// DEBUG_PARSER = true;
+ 	// ERROR_REPORTING = false;
+}
+
+PARSER_BEGIN(clike)
+
+package traductor;
+
+import lib.attributes.Attributes;import lib.symbolTable.*;
+import lib.symbolTable.exceptions.*;import org.w3c.dom.Attr;
+
+public class clike {
+    static SymbolTable st;
+
+    public static void main(String[] args) {
+    	clike parser = null;
+    	try {
+	    	if (args.length == 0) {
+				parser = new clike(System.in);
+			}
+			else {
+	            parser = new clike(new java.io.FileInputStream(args[0]));
+			}
+			// Programa es el símbolo inicial de la gramática
+			parser.Programa();
+			System.out.println("***** Análisis terminado con éxito *****");
+		}
+		catch (java.io.FileNotFoundException e) {
+			System.err.println("Fichero " + args[0] + " no encontrado.");
+		}
+		catch (TokenMgrError e) {
+        	System.err.println("LEX_ERROR: " + e.getMessage());
+        }
+		catch (ParseException e) {
+			System.out.println("PARSER_ERROR: " + e.getMessage());
+		}
+    }
+}
+
+PARSER_END(clike)
+
+TOKEN_MGR_DECLS : {
+	static void CommonTokenAction(Token token) {
+        String inicio = "(" + token.beginLine + "," +
+                         token.beginColumn + "): ";
+        String fin = "\"" + token.image + "\"";
+        switch (token.kind) {
+            case tBOOL:
+            case tCHAR:
+            case tINT:
+            case tVOID:
+                System.out.println(inicio + "tipo " + fin);
+                break;
+            case tPC:
+            case tC:
+                System.out.println(inicio + "carácter separador " + fin);
+                break;
+            case tAMP:
+                System.out.println(inicio + "referencia " + fin);
+                break;
+            case tAP:
+            case tAC:
+            case tAL:
+                System.out.println(inicio + "carácter de apertura " + fin);
+                break;
+            case tCP:
+            case tCC:
+            case tCL:
+                System.out.println(inicio + "carácter de cierre " + fin);
+                break;
+            case tAS:
+                System.out.println(inicio + "operador de asignación " + fin);
+                break;
+            case tIG:
+                System.out.println(inicio + "operador igual " + fin);
+                break;
+            case tDIS:
+                System.out.println(inicio + "operador distinto " + fin);
+                break;
+            case tMAY:
+                System.out.println(inicio + "operador mayor " + fin);
+                break;
+            case tMEN:
+                System.out.println(inicio + "operador menor " + fin);
+                break;
+            case tMAY_IG:
+                System.out.println(inicio + "operador mayor o igual " + fin);
+                break;
+            case tMEN_IG:
+                System.out.println(inicio + "operador menor o igual " + fin);
+                break;
+            case tOR:
+                System.out.println(inicio + "operador or " + fin);
+                break;
+            case tAND:
+                System.out.println(inicio + "operador and " + fin);
+                break;
+            case tNOT:
+                System.out.println(inicio + "operador not " + fin);
+                break;
+            case tSUM:
+                System.out.println(inicio + "operador de suma " + fin);
+                break;
+            case tRES:
+                System.out.println(inicio + "operador de resta " + fin);
+                break;
+            case tMUL:
+                System.out.println(inicio + "operador de multiplicación " + fin);
+                break;
+            case tDIV:
+                System.out.println(inicio + "operador de división " + fin);
+                break;
+            case tMOD:
+                System.out.println(inicio + "operador de módulo " + fin);
+                break;
+            case tSTRING:
+                System.out.println(inicio + "string " + token.image);
+                break;
+            case tTRUE:
+            case tFALSE:
+                System.out.println(inicio + "booleano " + fin);
+                break;
+            case tCONST_CHAR:
+                System.out.println(inicio + "constante cáracter " + fin);
+                break;
+            case tCONST_INT:
+                System.out.println(inicio + "constante entera " + fin);
+                break;
+            case tID:
+                System.out.println(inicio + "identificador " + fin);
+                break;
+            default:
+                System.out.println(inicio + "token " + fin);
+                break;
+        }
+	}
+}
+
+SKIP : {
+	" "
+|	"\n"
+|   "\t"
+|   "\r"
+|   < "//" (~["\r", "\n"])* >
+}
+
+TOKEN : {
+ 	< #LETTER: (["a"-"z","A"-"Z"]) >
+|	< #DIGIT: ["0"-"9"] >
+|   < #TOK: ~[] >
+}
+
+TOKEN : {
+    < tBOOL: "bool" >
+|	< tCHAR: "char" >
+|	< tINT: "int" >
+|	< tVOID: "void" >
+|	< tIF: "if" >
+|	< tWHILE: "while" >
+|	< tELSE: "else" >
+|   < tPRINT: "print" >
+|   < tPRINTLN: "print_ln" >
+|   < tREAD: "read" >
+|   < tREADLN: "read_ln" >
+|   < tRET: "return" >
+|	< tPC: ";" >
+|	< tC: "," >
+|	< tAMP: "&" >
+|	< tAP: "(" >
+|	< tCP: ")" >
+|   < tAC: "[" >
+|   < tCC: "]" >
+|	< tAL: "{" >
+|	< tCL: "}" >
+|	< tAS: "=" >
+|   < tIG: "==" >
+|   < tDIS: "!=" >
+|   < tMAY: ">" >
+|   < tMEN: "<" >
+|   < tMAY_IG: ">=" >
+|   < tMEN_IG: "<=" >
+|   < tOR: "||" >
+|   < tAND: "&&" >
+|   < tNOT: "!" >
+|   < tSUM: "+" >
+|   < tRES: "-" >
+|   < tMUL: "*" >
+|   < tDIV: "/" >
+|   < tMOD: "%" >
+|   < tSTRING : "\"" (~["\""])* "\"" >
+|   < tINT2CHAR: "int2char" >
+|   < tCHAR2INT: "char2int" >
+|   < tTRUE: "true" >
+|   < tFALSE: "false" >
+|   < tCONST_CHAR: "\'" <TOK> "\'" >
+|	< tCONST_INT: (<DIGIT>)+ >
+|   < tID: <LETTER>(<LETTER>|<DIGIT>|"_")* >
+}
+
+SPECIAL_TOKEN : {
+    < tBASURA: ~[] >
+        {
+            System.out.println("ERROR LÉXICO: (" + matchedToken.beginLine +
+            ", " + matchedToken.beginColumn + "): símbolo no reconocido: \"" +
+            matchedToken.image + "\"");
+        }
+}
+
+//------------ Símbolo inicial de la gramática
+void Programa() :
+{
+
+}
+{
+	(declaracion())+
+	< EOF >
+}
+
+void declaracion() :
+{
+
+}
+{
+	LOOKAHEAD(3)
+	declaracion_variables() < tPC >
+|   declaracion_func_proc()
+}
+
+void declaracion_variables(Attributes at) :
+{
+    Attributes at1 = new Attributes();
+    Attributes at2 = new Attributes();
+}
+{
+    tipo(at1)
+    { at2.type = at1.type; }
+    lista_vars(at2)
+}
+
+void variable(Attributes at) :
+{
+    Token t1, t2;
+}
+{
+    LOOKAHEAD(2)
+    t1 = < tID >
+    < tAC >
+    t2 = < tCONST_INT >
+    < tCC >
+    {
+        Symbol s = null;
+        try {
+            s = new SymbolArray(t1.image, 0, Integer.parseInt(t2.image)-1,
+                                at.type);
+            st.insertSymbol(s);
+        }
+        catch (AlreadyDefinedSymbolException e){
+            errSem.deteccion(e, t1);
+        }
+    }
+|   t1 = < tID >
+    {
+        Symbol s = null;
+        if (at.type == Symbol.Types.INT){
+            s = new SymbolInt(t1.image);
+        }
+        else if (at.type == Symbol.Types.CHAR){
+            s = new SymbolChar(t1.image);
+        }
+        else {
+            s = new SymbolBool(t1.image);
+        }
+        try {
+            st.insertSymbol(s);
+        }
+        catch (AlreadyDefinedSymbolException e) {
+            errSem.deteccion(e, t1);
+        }
+    }
+}
+
+void lista_vars(Attributes at) :
+{
+    Attributes at1 = new Attributes();
+    at1.type = at.type;
+}
+{
+    variable(at1)
+    (
+        < tC >
+        variable(at1)
+    )*
+}
+
+void declaracion_func_proc() :
+{
+
+}
+{
+    tipo()
+    < tID >
+    resto_declaracion_func_proc()
+}
+
+void resto_declaracion_func_proc() :
+{
+
+}
+{
+    < tAP >
+    (lista_params())?
+    < tCP >
+    < tAL >
+    (declaracion_variables() < tPC >)*
+    (instruccion())+
+    < tCL >
+}
+
+void parametro() :
+{
+
+}
+{
+    tipo()
+    (< tAMP >)?
+    variable()
+}
+
+void lista_params() :
+{
+
+}
+{
+    parametro()
+    (
+        < tC >
+        parametro()
+    )*
+}
+
+void instruccion() :
+{
+
+}
+{
+    inst_leer() < tPC >
+|   inst_leer_linea() < tPC >
+|   inst_escribir() < tPC >
+|   inst_escribir_linea() < tPC >
+|   LOOKAHEAD(2) inst_invoc_proc() < tPC >
+|   inst_asignacion() < tPC >
+|   inst_seleccion()
+|   inst_iteracion()
+|   inst_return() < tPC >
+}
+
+void inst_escribir() :
+{
+
+}
+{
+    < tPRINT > < tAP > lista_una_o_mas_exps() < tCP >
+}
+
+void inst_escribir_linea() :
+{
+
+}
+{
+    < tPRINTLN > < tAP > lista_cero_o_mas_exps() < tCP >
+}
+
+void inst_leer() :
+{
+
+}
+{
+    < tREAD > < tAP > lista_uno_o_mas_asignables() < tCP >
+}
+
+void inst_leer_linea() :
+{
+
+}
+{
+    < tREADLN > < tAP > lista_cero_o_mas_asignables() < tCP >
+}
+
+void inst_asignacion(Attributes at) :
+{
+    Attributes at1 = new Attributes();
+    Attributes at2 = new Attributes();
+}
+{
+    asignable(at1)
+    < tAS >
+    expresion(at2)
+    {
+        Symbol s = null;
+        try {
+            s = st.getSymbol(at1.name);
+            // Si variable escalar y tipos de at1 y at2 iguales: OK
+            // Si es una componente de vector y tipos de at1 y at2 iguales: OK
+            // ...
+        }
+        catch (AlreadyDefinedSymbolException e) {
+            errSem.deteccion("Tipos incompatibles");
+        }
+    }
+}
+
+void expresion() :
+{
+
+}
+{
+    relacion()
+    (mas_relacion())?
+}
+
+void mas_relacion() :
+{
+
+}
+{
+    (and_or() relacion())+
+}
+
+void and_or() :
+{
+
+}
+{
+    < tOR >
+|   < tAND >
+}
+
+void relacion(Attributes at) :
+{
+    Attributes at1 = new Attributes();
+    Attributes at2 = new Attributes();
+    Attributes at3 = new Attributes();
+}
+{
+    expresion_simple(at1)
+    {
+        at.isConst = at1.isConst;
+        at.isVar = at1.isVar;
+        at.type = at1.type;
+        // ...
+    }
+    (
+        operador_relacional(at2)
+        expresion_simple(at3)
+        {
+            if (at1.type == at3.type) {
+                at.type = Symbol.Types.BOOL;
+            }
+            else {
+                at.type = Symbol.Types.UNDEFINED;
+                errSem.deteccion("Tipos incompatibles"); // ...
+            }
+            at.isVar = false;
+            // ...
+        }
+    )?
+}
+
+void operador_relacional() :
+{
+
+}
+{
+    < tIG >
+|   < tMEN >
+|   < tMAY >
+|   < tMEN_IG >
+|   < tMAY_IG >
+|   < tDIS >
+}
+
+void expresion_simple() :
+{
+
+}
+{
+    (
+        op_MAS_MENOS()
+    )?
+    termino()
+    (
+        op_MAS_MENOS()
+        termino()
+    )*
+}
+
+void op_MAS_MENOS() :
+{
+
+}
+{
+    < tSUM >
+|   < tRES >
+}
+
+void termino() :
+{
+
+}
+{
+    factor()
+    (
+        op_MULT()
+        factor()
+    )*
+}
+
+void op_MULT() :
+{
+
+}
+{
+    < tMUL >
+|   < tDIV >
+|   < tMOD >
+}
+
+void factor(Attributes at) :
+{
+
+}
+{
+    primario()
+|   < tNOT >
+    primario()
+}
+
+void primario() :
+{
+
+}
+{
+    < tAP > expresion() < tCP >
+|   < tINT2CHAR > < tAP > expresion() < tCP >
+|   < tCHAR2INT > < tAP > expresion() < tCP >
+|   LOOKAHEAD(2) < tID > < tAP > lista_cero_o_mas_exps() < tCP >
+|   LOOKAHEAD(2) < tID > < tAC > expresion() < tCC >
+|   < tID >
+|   < tCONST_INT >
+|   < tCONST_CHAR >
+|   < tSTRING >
+|   < tTRUE >
+|   < tFALSE >
+}
+
+void asignable() :
+{
+
+}
+{
+    LOOKAHEAD(2) < tID > < tAC > expresion() < tCC >
+|   < tID >
+}
+
+void tipo(Attributes at) :
+{
+
+}
+{
+    < tINT >
+    { at.type = Symbol.Types.INT; }
+|   < tCHAR >
+    { at.type = Symbol.Types.CHAR; }
+|   < tBOOL >
+    { at.type = Symbol.Types.BOOL; }
+|   < tVOID >
+    { at.type = Symbol.Types.PROCEDURE; }
+}
+
+void inst_invoc_proc() :
+{
+
+}
+{
+    < tID > < tAP > lista_cero_o_mas_exps() < tCP >
+}
+
+void inst_seleccion() :
+{
+
+}
+{
+    < tIF > expresion() < tAL > (instruccion())* < tCL >
+    (bloque_else())?
+}
+
+void bloque_else() :
+{
+
+}
+{
+    < tELSE > < tAL > (instruccion())* < tCL >
+}
+
+void inst_iteracion() :
+{
+
+}
+{
+    < tWHILE > expresion() < tAL > (instruccion())* < tCL >
+}
+
+void inst_return() :
+{
+
+}
+{
+    < tRET > expresion()
+}
+
+void lista_cero_o_mas_exps() :
+{
+
+}
+{
+    (lista_una_o_mas_exps())?
+}
+
+void lista_una_o_mas_exps() :
+{
+
+}
+{
+    expresion()
+    (
+        < tC >
+        expresion()
+    )*
+}
+
+void lista_cero_o_mas_asignables() :
+{
+
+}
+{
+    (lista_uno_o_mas_asignables())?
+}
+
+void lista_uno_o_mas_asignables() :
+{
+
+}
+{
+    asignable()
+    (
+        < tC >
+        asignable()
+    )*
+}
