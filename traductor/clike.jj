@@ -9,7 +9,7 @@
 
 options {
  	IGNORE_CASE = false;
- 	COMMON_TOKEN_ACTION = true;
+ 	COMMON_TOKEN_ACTION = false;
  	// DEBUG_PARSER = true;
  	// ERROR_REPORTING = false;
 }
@@ -50,103 +50,6 @@ public class clike {
 }
 
 PARSER_END(clike)
-
-TOKEN_MGR_DECLS : {
-	static void CommonTokenAction(Token token) {
-        String inicio = "(" + token.beginLine + "," +
-                         token.beginColumn + "): ";
-        String fin = "\"" + token.image + "\"";
-        switch (token.kind) {
-            case tBOOL:
-            case tCHAR:
-            case tINT:
-            case tVOID:
-                System.out.println(inicio + "tipo " + fin);
-                break;
-            case tPC:
-            case tC:
-                System.out.println(inicio + "carácter separador " + fin);
-                break;
-            case tAMP:
-                System.out.println(inicio + "referencia " + fin);
-                break;
-            case tAP:
-            case tAC:
-            case tAL:
-                System.out.println(inicio + "carácter de apertura " + fin);
-                break;
-            case tCP:
-            case tCC:
-            case tCL:
-                System.out.println(inicio + "carácter de cierre " + fin);
-                break;
-            case tAS:
-                System.out.println(inicio + "operador de asignación " + fin);
-                break;
-            case tIG:
-                System.out.println(inicio + "operador igual " + fin);
-                break;
-            case tDIS:
-                System.out.println(inicio + "operador distinto " + fin);
-                break;
-            case tMAY:
-                System.out.println(inicio + "operador mayor " + fin);
-                break;
-            case tMEN:
-                System.out.println(inicio + "operador menor " + fin);
-                break;
-            case tMAY_IG:
-                System.out.println(inicio + "operador mayor o igual " + fin);
-                break;
-            case tMEN_IG:
-                System.out.println(inicio + "operador menor o igual " + fin);
-                break;
-            case tOR:
-                System.out.println(inicio + "operador or " + fin);
-                break;
-            case tAND:
-                System.out.println(inicio + "operador and " + fin);
-                break;
-            case tNOT:
-                System.out.println(inicio + "operador not " + fin);
-                break;
-            case tSUM:
-                System.out.println(inicio + "operador de suma " + fin);
-                break;
-            case tRES:
-                System.out.println(inicio + "operador de resta " + fin);
-                break;
-            case tMUL:
-                System.out.println(inicio + "operador de multiplicación " + fin);
-                break;
-            case tDIV:
-                System.out.println(inicio + "operador de división " + fin);
-                break;
-            case tMOD:
-                System.out.println(inicio + "operador de módulo " + fin);
-                break;
-            case tSTRING:
-                System.out.println(inicio + "string " + token.image);
-                break;
-            case tTRUE:
-            case tFALSE:
-                System.out.println(inicio + "booleano " + fin);
-                break;
-            case tCONST_CHAR:
-                System.out.println(inicio + "constante cáracter " + fin);
-                break;
-            case tCONST_INT:
-                System.out.println(inicio + "constante entera " + fin);
-                break;
-            case tID:
-                System.out.println(inicio + "identificador " + fin);
-                break;
-            default:
-                System.out.println(inicio + "token " + fin);
-                break;
-        }
-	}
-}
 
 SKIP : {
 	" "
@@ -221,21 +124,21 @@ SPECIAL_TOKEN : {
 //------------ Símbolo inicial de la gramática
 void Programa() :
 {
-
+    Attributes at = new Attributes();
 }
 {
-	(declaracion())+
+	(declaracion(at))+
 	< EOF >
 }
 
-void declaracion() :
+void declaracion(Attributes at) :
 {
 
 }
 {
 	LOOKAHEAD(3)
-	declaracion_variables() < tPC >
-|   declaracion_func_proc()
+	declaracion_variables(at) < tPC >
+|   declaracion_func_proc(at)
 }
 
 void declaracion_variables(Attributes at) :
@@ -314,13 +217,13 @@ void declaracion_func_proc() :
     resto_declaracion_func_proc()
 }
 
-void resto_declaracion_func_proc() :
+void resto_declaracion_func_proc(Attributes at) :
 {
 
 }
 {
     < tAP >
-    (lista_params())?
+    (lista_params(at))?
     < tCP >
     < tAL >
     (declaracion_variables() < tPC >)*
@@ -328,25 +231,28 @@ void resto_declaracion_func_proc() :
     < tCL >
 }
 
-void parametro() :
+void parametro(Attributes at) :
 {
-
+    Attributes at1 = new Attributes();
+    Attributes at2 = new Attributes();
 }
 {
-    tipo()
-    (< tAMP >)?
-    variable()
+    tipo(at1)
+    { at2.type = at1.type; }
+    (< tAMP >)? // añadir como producción
+    variable(at2) // añadir parámetros
 }
 
-void lista_params() :
+void lista_params(Attributes at) :
 {
-
+    Attributes at1 = new Attributes();
+    at1.type = at.type;
 }
 {
-    parametro()
+    parametro(at1)
     (
         < tC >
-        parametro()
+        parametro(at1)
     )*
 }
 

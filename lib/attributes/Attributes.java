@@ -26,6 +26,7 @@ public class Attributes implements Cloneable {
     public ArrayList<Symbol> parList;
     public boolean isVar;
     public boolean isCompVector;
+    public boolean isConst;
 
     public Attributes() {
         //COMPLETAR
