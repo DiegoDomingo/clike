@@ -207,14 +207,35 @@ void lista_vars(Attributes at) :
     )*
 }
 
-void declaracion_func_proc() :
+void declaracion_func_proc(Attributes at) :
 {
-
+    Token t;
+    Attributes at1 = new Attributes();
+    Attributes at2 = new Attributes();
 }
 {
-    tipo()
-    < tID >
-    resto_declaracion_func_proc()
+    tipo(at1)
+    t = < tID >
+    {
+        Symbol s = null;
+        at.parList = new ArrayList<Symbol>();
+        if (at1.type == Symbol.Types.PROCEDURE) {
+            s = new SymbolProcedure(t.image, at.parList);
+        }
+        else {
+            s = new SymbolFunction(t.image, at.parList, at1.type);
+        }
+        try {
+            s.insertSymbol();
+        }
+        catch (AlreadyDefinedSymbolException e) {
+            errSem.deteccion(e, t);
+        }
+        at.nivel = s.nivel;
+        st.insertBlock();
+        at2.parList = at.parList;
+    }
+    resto_declaracion_func_proc(at2)
 }
 
 void resto_declaracion_func_proc(Attributes at) :
