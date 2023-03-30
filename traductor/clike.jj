@@ -164,9 +164,16 @@ void variable(Attributes at) :
     < tCC >
     {
         Symbol s = null;
-        try {
+        if (at.parClass == ParameterClass.VAL || at.parClass == ParameterClass.REF) {
+            s = new SymbolArray(t1.image, 0, Integer.parseInt(t2.image)-1,
+                                at.type, at.parClass);
+            at.parList.add(s);
+        }
+        else {
             s = new SymbolArray(t1.image, 0, Integer.parseInt(t2.image)-1,
                                 at.type);
+        }
+        try {
             st.insertSymbol(s);
         }
         catch (AlreadyDefinedSymbolException e){
@@ -176,14 +183,28 @@ void variable(Attributes at) :
 |   t1 = < tID >
     {
         Symbol s = null;
-        if (at.type == Symbol.Types.INT){
-            s = new SymbolInt(t1.image);
-        }
-        else if (at.type == Symbol.Types.CHAR){
-            s = new SymbolChar(t1.image);
+        if (at.parClass == ParameterClass.VAL || at.parClass == ParameterClass.REF) {
+            if (at.type == Symbol.Types.INT) {
+                s = new SymbolInt(t1.image, at.parClass);
+            }
+            else if (at.type == Symbol.Types.CHAR) {
+                s = new SymbolChar(t1.image, at.parClass);
+            }
+            else {
+                s = new SymbolBool(t1.image, at.parClass);
+            }
+            at.parList.add(s);
         }
         else {
-            s = new SymbolBool(t1.image);
+            if (at.type == Symbol.Types.INT) {
+                s = new SymbolInt(t1.image);
+            }
+            else if (at.type == Symbol.Types.CHAR) {
+                s = new SymbolChar(t1.image);
+            }
+            else {
+                s = new SymbolBool(t1.image);
+            }
         }
         try {
             st.insertSymbol(s);
@@ -236,18 +257,19 @@ void declaracion_func_proc(Attributes at) :
         at2.parList = at.parList;
     }
     resto_declaracion_func_proc(at2)
+    { s.parList = at2.parList; }
 }
 
 void resto_declaracion_func_proc(Attributes at) :
 {
-
+    Attributes at1 = new Attributes();
 }
 {
     < tAP >
     (lista_params(at))?
     < tCP >
     < tAL >
-    (declaracion_variables() < tPC >)*
+    (declaracion_variables(at1) < tPC >)*
     (instruccion())+
     < tCL >
 }
@@ -259,9 +281,27 @@ void parametro(Attributes at) :
 }
 {
     tipo(at1)
-    { at2.type = at1.type; }
-    (< tAMP >)? // añadir como producción
-    variable(at2) // añadir parámetros
+    (referencia(at1))?
+    { 
+        at2.type = at1.type;
+        if (at1.parClass != ParameterClass.REF) {
+            at2.parClass = ParameterClass.VAL;
+        }
+        else {
+            at2.parClass = at1.parClass; 
+        }
+        at2.parList = at.parList;
+    }
+    variable(at2)
+}
+
+void referencia(Attributes at) :
+{
+
+}
+{
+    < tAMP >
+    { at.parClass = ParameterClass.REF; }
 }
 
 void lista_params(Attributes at) :
@@ -338,11 +378,17 @@ void inst_asignacion(Attributes at) :
         Symbol s = null;
         try {
             s = st.getSymbol(at1.name);
-            // Si variable escalar y tipos de at1 y at2 iguales: OK
-            // Si es una componente de vector y tipos de at1 y at2 iguales: OK
-            // ...
+            if (at1.type != Types.INT && at1.type != Types.BOOL && at1.type != Types.CHAR) { 
+                throw new IncompatibleTypesException();
+            }
+            if (at1.type != at2.type) {
+                throw new IncompatibleTypesException();
+            }
         }
-        catch (AlreadyDefinedSymbolException e) {
+        catch (SymbolNotFoundException e) {
+            errSem.deteccion("El símbolo " + at1.name + " no existe");
+        }
+        catch (IncompatibleTypesException e) {
             errSem.deteccion("Tipos incompatibles");
         }
     }
@@ -374,6 +420,7 @@ void and_or() :
 |   < tAND >
 }
 
+// relacion: expresion_simple (operador_relacional expresion_simple)?
 void relacion(Attributes at) :
 {
     Attributes at1 = new Attributes();
@@ -476,20 +523,75 @@ void factor(Attributes at) :
 
 void primario() :
 {
-
+    Token t;
 }
 {
     < tAP > expresion() < tCP >
 |   < tINT2CHAR > < tAP > expresion() < tCP >
 |   < tCHAR2INT > < tAP > expresion() < tCP >
-|   LOOKAHEAD(2) < tID > < tAP > lista_cero_o_mas_exps() < tCP >
-|   LOOKAHEAD(2) < tID > < tAC > expresion() < tCC >
-|   < tID >
-|   < tCONST_INT >
-|   < tCONST_CHAR >
-|   < tSTRING >
+|   LOOKAHEAD(2) t = < tID > < tAP > lista_cero_o_mas_exps() < tCP >
+    {
+        Symbol s = null;
+        try {
+            s = st.getSymbol(t.image);
+            if(!s instanceof SymbolFunction) {
+                errSem.deteccion("Se espearaba función ....")
+            }
+        }
+        catch (SymbolNotFoundException e) {
+            errSem.deteccion(e, t);
+        }
+        at.isVar = false;
+        at.type = ((SymbolFunction) s).returnType;
+        // Procesar la lista de parámetros reales...
+        // ...
+    }
+|   LOOKAHEAD(2) t = < tID > < tAC > expresion() < tCC >
+    {
+        // ...
+    }
+|   t = < tID >
+    {
+        Symbol s = null;
+        try {
+            s = st.getSymbol(t.image);
+        }
+        catch (SymbolNotFoundException e) {
+            errSem.deteccion(e, t);
+        }
+        at.isVar = true;
+        at.type = s.type;
+    }
+|   t = < tCONST_INT >
+    {
+        at.isVar = false;
+        at.isConst = true;
+        at.valInt = Integer.parseInt(t.image);
+    }
+|   t = < tCONST_CHAR >
+    {
+        at.isVar = false;
+        at.isConst = true;
+        at.valChar = t.charAt(0);
+    }
+|   t = < tSTRING >
+    {
+        at.isVar = false;
+        at.isConst = true;
+        at.valString = t.image;
+    }
 |   < tTRUE >
+    {
+        at.isVar = false;
+        at.isConst = true;
+        at.valBool = true;
+    }
 |   < tFALSE >
+    {
+        at.isVar = false;
+        at.isConst = true;
+        at.valBool = false;
+    }
 }
 
 void asignable() :
@@ -516,12 +618,27 @@ void tipo(Attributes at) :
     { at.type = Symbol.Types.PROCEDURE; }
 }
 
-void inst_invoc_proc() :
+void inst_invoc_proc(Attributes at) :
 {
-
+    Token t;
+    at.lExps = new ArrayList<Attributes>();
 }
 {
-    < tID > < tAP > lista_cero_o_mas_exps() < tCP >
+    t = < tID > 
+    < tAP > 
+    lista_cero_o_mas_exps() 
+    < tCP >
+    {
+        Symbol s = null;
+        try {
+            s = st.getSymbol(t.image);
+            // ...
+        }
+        catch (SymbolNotFoundException e) {
+            // ...
+        }
+        // Analizar parámetros reales con parámetros formales
+    }
 }
 
 void inst_seleccion() :
@@ -549,9 +666,9 @@ void inst_iteracion() :
     < tWHILE > expresion() < tAL > (instruccion())* < tCL >
 }
 
-void inst_return() :
+void inst_return(Attributes at) :
 {
-
+    Attributes at1 = new Attributes();
 }
 {
     < tRET > expresion()
