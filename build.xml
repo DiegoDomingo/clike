@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <project name="MyProject" default="dist" basedir=".">
 	<description>
        File:   build.xml
@@ -49,16 +50,16 @@
 
 	<target name="jcc" depends="init"> 
 	  	<!-- Generar el código fuente del traductor desde ${src_compiler} hasta ${jcc_files} -->
-	  	<javacc target="${jcc_src}/${project}.jj"
-	      	javacchome="/usr/share/java"
+		<javacc target="${jcc_src}/${project}.jj"
+	      	javacchome="C:\Program Files\javacc-javacc-7.0.10\target"
 	      	outputdirectory="${jcc_files}"
 	      	static="true"
 	  	/>
 	</target>
 
 	<target name="compile" depends="init,jcc" description="compile the source">
-	  	<!-- Compilar el código java desde ${lib} y ${jcc_files} en ${build} -->
-	  	<javac executable="${java_compiler}" destdir="${build}" includeantruntime="false" target="1.8" source="1.8">
+		<!-- Compilar el código java desde ${lib} y ${jcc_files} en ${build} -->
+	  	<javac executable="${java_compiler}" destdir="${build}" includeantruntime="false" encoding="UTF-8" target="1.8" source="1.8">
 	      	<src path="${jcc_files}"/>
 	      	<src path="${lib}"/>
 	      	<compilerarg value="-Xlint:-unchecked"/>
@@ -68,7 +69,7 @@
 	<!-- Crear el jar con todo en ${dist} -->
 	<target name="dist" depends="compile">
 		<manifest file="${build_META_INF}/MANIFEST.MF" >
-	  		<attribute name="Class-Path" value="${dir_traductor}/${project}.jar" />
+	  		<attribute name="Class-Path" value="${lib}/*" />
 	    	<attribute name="Main-Class" value="${dir_traductor}/${main_class}" />  
  		</manifest>
 		<jar manifest="${build_META_INF}/MANIFEST.MF" jarfile="${dist}/${project}.jar" basedir="${build}" />

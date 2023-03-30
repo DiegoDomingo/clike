@@ -1,2 +1,7 @@
-.idea
-*.iml
+# Directorios generados al compilar
+build
+dist
+jcc_files
+
+# VS Code
+.vscode

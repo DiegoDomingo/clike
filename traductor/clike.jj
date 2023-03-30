@@ -18,14 +18,22 @@ PARSER_BEGIN(clike)
 
 package traductor;
 
-import lib.attributes.Attributes;import lib.symbolTable.*;
-import lib.symbolTable.exceptions.*;import org.w3c.dom.Attr;
+import java.util.ArrayList;
+
+import lib.attributes.Attributes;
+import lib.errores.ErrorSemantico;
+import lib.symbolTable.*;
+import lib.symbolTable.exceptions.*;
 
 public class clike {
+
     static SymbolTable st;
+    static ErrorSemantico errSem;
 
     public static void main(String[] args) {
     	clike parser = null;
+        st = new SymbolTable();
+        errSem = new ErrorSemantico();
     	try {
 	    	if (args.length == 0) {
 				parser = new clike(System.in);
@@ -47,6 +55,7 @@ public class clike {
 			System.out.println("PARSER_ERROR: " + e.getMessage());
 		}
     }
+    
 }
 
 PARSER_END(clike)
@@ -164,7 +173,7 @@ void variable(Attributes at) :
     < tCC >
     {
         Symbol s = null;
-        if (at.parClass == ParameterClass.VAL || at.parClass == ParameterClass.REF) {
+        if (at.parClass == Symbol.ParameterClass.VAL || at.parClass == Symbol.ParameterClass.REF) {
             s = new SymbolArray(t1.image, 0, Integer.parseInt(t2.image)-1,
                                 at.type, at.parClass);
             at.parList.add(s);
@@ -183,7 +192,7 @@ void variable(Attributes at) :
 |   t1 = < tID >
     {
         Symbol s = null;
-        if (at.parClass == ParameterClass.VAL || at.parClass == ParameterClass.REF) {
+        if (at.parClass == Symbol.ParameterClass.VAL || at.parClass == Symbol.ParameterClass.REF) {
             if (at.type == Symbol.Types.INT) {
                 s = new SymbolInt(t1.image, at.parClass);
             }
@@ -247,17 +256,17 @@ void declaracion_func_proc(Attributes at) :
             s = new SymbolFunction(t.image, at.parList, at1.type);
         }
         try {
-            s.insertSymbol();
+            st.insertSymbol(s);
         }
         catch (AlreadyDefinedSymbolException e) {
             errSem.deteccion(e, t);
         }
-        at.nivel = s.nivel;
+        // at.nivel = s.nivel;
         st.insertBlock();
         at2.parList = at.parList;
     }
     resto_declaracion_func_proc(at2)
-    { s.parList = at2.parList; }
+    { s.parList = at2.parList; } // FIXME:
 }
 
 void resto_declaracion_func_proc(Attributes at) :
@@ -284,8 +293,8 @@ void parametro(Attributes at) :
     (referencia(at1))?
     { 
         at2.type = at1.type;
-        if (at1.parClass != ParameterClass.REF) {
-            at2.parClass = ParameterClass.VAL;
+        if (at1.parClass != Symbol.ParameterClass.REF) {
+            at2.parClass = Symbol.ParameterClass.VAL;
         }
         else {
             at2.parClass = at1.parClass; 
@@ -301,7 +310,7 @@ void referencia(Attributes at) :
 }
 {
     < tAMP >
-    { at.parClass = ParameterClass.REF; }
+    { at.parClass = Symbol.ParameterClass.REF; }
 }
 
 void lista_params(Attributes at) :
@@ -378,7 +387,7 @@ void inst_asignacion(Attributes at) :
         Symbol s = null;
         try {
             s = st.getSymbol(at1.name);
-            if (at1.type != Types.INT && at1.type != Types.BOOL && at1.type != Types.CHAR) { 
+            if (at1.type != Symbol.Types.INT && at1.type != Symbol.Types.BOOL && at1.type != Symbol.Types.CHAR) { 
                 throw new IncompatibleTypesException();
             }
             if (at1.type != at2.type) {
@@ -386,15 +395,15 @@ void inst_asignacion(Attributes at) :
             }
         }
         catch (SymbolNotFoundException e) {
-            errSem.deteccion("El símbolo " + at1.name + " no existe");
+            // errSem.deteccion("El símbolo no existe");
         }
         catch (IncompatibleTypesException e) {
-            errSem.deteccion("Tipos incompatibles");
+            // errSem.deteccion("Tipos incompatibles");
         }
     }
 }
 
-void expresion() :
+void expresion(Attributes at) :
 {
 
 }
@@ -444,7 +453,8 @@ void relacion(Attributes at) :
             }
             else {
                 at.type = Symbol.Types.UNDEFINED;
-                errSem.deteccion("Tipos incompatibles"); // ...
+                // errSem.deteccion("Tipos incompatibles"); 
+                // ...
             }
             at.isVar = false;
             // ...
@@ -452,7 +462,7 @@ void relacion(Attributes at) :
     )?
 }
 
-void operador_relacional() :
+void operador_relacional(Attributes at) :
 {
 
 }
@@ -465,7 +475,7 @@ void operador_relacional() :
 |   < tDIS >
 }
 
-void expresion_simple() :
+void expresion_simple(Attributes at) :
 {
 
 }
@@ -521,7 +531,7 @@ void factor(Attributes at) :
     primario()
 }
 
-void primario() :
+void primario(Attributes at) :
 {
     Token t;
 }
@@ -534,8 +544,8 @@ void primario() :
         Symbol s = null;
         try {
             s = st.getSymbol(t.image);
-            if(!s instanceof SymbolFunction) {
-                errSem.deteccion("Se espearaba función ....")
+            if (!(s instanceof SymbolFunction)) {
+                // errSem.deteccion("Se esperaba función...");
             }
         }
         catch (SymbolNotFoundException e) {
@@ -572,7 +582,7 @@ void primario() :
     {
         at.isVar = false;
         at.isConst = true;
-        at.valChar = t.charAt(0);
+        at.valChar = t.image.charAt(0);
     }
 |   t = < tSTRING >
     {
@@ -594,7 +604,7 @@ void primario() :
     }
 }
 
-void asignable() :
+void asignable(Attributes at) :
 {
 
 }
