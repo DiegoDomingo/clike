@@ -24,9 +24,11 @@ public class Attributes implements Cloneable {
     public String code;
     public String name;
     public ArrayList<Symbol> parList;
+    public ArrayList<Attributes> lExps;
     public boolean isVar;
     public boolean isCompVector;
     public boolean isConst;
+    public int nivel;
 
     public Attributes() {
         //COMPLETAR
