@@ -51,6 +51,14 @@ public class ErrorSemantico {
 		System.err.println(sep);
 	}
 
+	public static void deteccion(String mensaje, Attributes at) {
+		contadorErrores++;
+		System.err.println(sep);
+		System.err.println("ERROR SEMÁNTICO (" + t.beginLine + "," + t.beginColumn + "): " +
+				"Símbolo: '" + at.name + "'. " + mensaje);
+		System.err.println(sep);
+	}
+
 	public static void warning(String mensaje, Token t) {
 		contadorWarnings++;
 		System.err.println(sep);

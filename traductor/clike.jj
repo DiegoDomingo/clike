@@ -473,7 +473,7 @@ void relacion(Attributes at) :
             }
             else {
                 at.type = Symbol.Types.UNDEFINED;
-                // errSem.deteccion("Tipos incompatibles en expresión"); // FIXME:
+                errSem.deteccion("Tipos incompatibles en expresión: " + at1.type.name() + "/" + at3.type.name(), at3);
                 // ...
             }
             at.isVar = false;
