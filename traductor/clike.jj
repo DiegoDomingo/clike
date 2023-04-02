@@ -190,6 +190,7 @@ void variable(Attributes at) :
         }
         at.code = t1.image + "[" + t2.image + "]";
     }
+    // Porque se hacen los else 
 |   t1 = < tID >
     {
         Symbol s = null;
@@ -205,7 +206,7 @@ void variable(Attributes at) :
             }
             at.parList.add(s);
         }
-        else {
+        else {  
             if (at.type == Symbol.Types.INT) {
                 s = new SymbolInt(t1.image);
             }
@@ -230,7 +231,7 @@ void lista_vars(Attributes at) :
 {
     Attributes at1 = new Attributes();
     Attributes at2 = new Attributes();
-    at1.type = at.type;
+    at1.type = at.type; // Porque no se haría lo mismo con at2
 }
 {
     variable(at1)
@@ -284,6 +285,7 @@ void resto_declaracion_func_proc(Attributes at) :
     Attributes at1 = new Attributes();
     Attributes at2 = new Attributes();
     Attributes at3 = new Attributes();
+    at1.parList = at.parList;
 }
 {
     < tAP >
@@ -315,7 +317,7 @@ void parametro(Attributes at) :
         else {
             at3.parClass = at2.parClass;
         }
-        at3.parList = at.parList;
+        at3.parList = at.parList;   //at.parList está vacía
     }
     variable(at3)
 }
@@ -585,6 +587,10 @@ void primario(Attributes at) :
 |   LOOKAHEAD(2) t = < tID > < tAC > expresion(at1) < tCC >
     {
         // ...
+        Symbol s = null;
+        try {
+            s = st.getSymbol(t.image);
+        }
     }
 |   t = < tID >
     {
@@ -681,7 +687,7 @@ void inst_invoc_proc(Attributes at) :
             // ...
         }
         catch (SymbolNotFoundException e) {
-            // ...
+            errSem.deteccion(e, t);
         }
         // Analizar parámetros reales con parámetros formales
     }
@@ -740,6 +746,10 @@ void lista_cero_o_mas_exps(Attributes at) :
 }
 {
     (lista_una_o_mas_exps(at1))?
+    {
+        // Supongo que habrá que propagarlo hacia arriba
+        at.lExps = at1.lExps;
+    }
 }
 
 void lista_una_o_mas_exps(Attributes at) :
