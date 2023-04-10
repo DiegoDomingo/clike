@@ -30,6 +30,9 @@ public class Attributes implements Cloneable {
     public boolean isConst;
     public int nivel;
 
+    public int beginLine;
+    public int beginColumn;
+
     public Attributes() {
         //COMPLETAR
     }

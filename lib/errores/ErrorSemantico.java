@@ -11,6 +11,7 @@ package lib.errores;
 
 import traductor.Token;
 
+import lib.attributes.Attributes;
 import lib.symbolTable.exceptions.*; 
 
 public class ErrorSemantico {
@@ -54,7 +55,7 @@ public class ErrorSemantico {
 	public static void deteccion(String mensaje, Attributes at) {
 		contadorErrores++;
 		System.err.println(sep);
-		System.err.println("ERROR SEMÁNTICO (" + t.beginLine + "," + t.beginColumn + "): " +
+		System.err.println("ERROR SEMÁNTICO (" + at.beginLine + "," + at.beginColumn + "): " +
 				"Símbolo: '" + at.name + "'. " + mensaje);
 		System.err.println(sep);
 	}

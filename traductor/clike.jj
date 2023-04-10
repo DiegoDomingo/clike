@@ -190,7 +190,6 @@ void variable(Attributes at) :
         }
         at.code = t1.image + "[" + t2.image + "]";
     }
-    // Porque se hacen los else 
 |   t1 = < tID >
     {
         Symbol s = null;
@@ -296,6 +295,7 @@ void resto_declaracion_func_proc(Attributes at) :
     (instruccion(at3))+
     < tCL >
     {
+        System.err.println(st.toString());
         st.removeBlock();
     }
 }
@@ -410,7 +410,7 @@ void inst_asignacion(Attributes at) :
         try {
             s = st.getSymbol(at1.name);
             if (at1.type != Symbol.Types.INT && at1.type != Symbol.Types.BOOL && at1.type != Symbol.Types.CHAR && !at1.isCompVector) { 
-                errSem.deteccion("No es un asignable ", t);
+                errSem.deteccion("No es un asignable", t);
             }
             if (at1.type != at2.type) {
                 errSem.deteccion("Tipos incompatibles en asignación: " + at1.type.name() + "/" + at2.type.name(), t);
@@ -590,6 +590,9 @@ void primario(Attributes at) :
         try {
             s = st.getSymbol(t.image);
         }
+        catch (SymbolNotFoundException e) {
+            errSem.deteccion(e, t);
+        }
     }
 |   t = < tID >
     {
@@ -602,36 +605,48 @@ void primario(Attributes at) :
         }
         at.isVar = true;
         at.type = s.type;
+        at.beginLine = t.beginLine;
+        at.beginColumn = t.beginColumn;
     }
 |   t = < tCONST_INT >
     {
         at.isVar = false;
         at.isConst = true;
         at.valInt = Integer.parseInt(t.image);
+        at.beginLine = t.beginLine;
+        at.beginColumn = t.beginColumn;
     }
 |   t = < tCONST_CHAR >
     {
         at.isVar = false;
         at.isConst = true;
         at.valChar = t.image.charAt(0);
+        at.beginLine = t.beginLine;
+        at.beginColumn = t.beginColumn;
     }
 |   t = < tSTRING >
     {
         at.isVar = false;
         at.isConst = true;
         at.valString = t.image;
+        at.beginLine = t.beginLine;
+        at.beginColumn = t.beginColumn;
     }
-|   < tTRUE >
+|   t = < tTRUE >
     {
         at.isVar = false;
         at.isConst = true;
         at.valBool = true;
+        at.beginLine = t.beginLine;
+        at.beginColumn = t.beginColumn;
     }
-|   < tFALSE >
+|   t = < tFALSE >
     {
         at.isVar = false;
         at.isConst = true;
         at.valBool = false;
+        at.beginLine = t.beginLine;
+        at.beginColumn = t.beginColumn;
     }
 }
 
@@ -646,8 +661,8 @@ void asignable(Attributes at) :
         Symbol s = null;
         try {
             s = st.getSymbol(t.image);
-            if (at1.type != Types.INT) {
-                errSem.deteccion("El selector de un array debe ser de tipo INT", t)
+            if (at1.type != Symbol.Types.INT) {
+                errSem.deteccion("El selector de un array debe ser de tipo INT", t);
             }
         }
         catch (SymbolNotFoundException e) {
