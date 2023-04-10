@@ -52,7 +52,7 @@ public class clike {
         	System.err.println("LEX_ERROR: " + e.getMessage());
         }
 		catch (ParseException e) {
-			System.out.println("PARSER_ERROR: " + e.getMessage());
+			System.err.println("PARSER_ERROR: " + e.getMessage());
 		}
     }
     
@@ -259,13 +259,15 @@ void declaracion_func_proc(Attributes at) :
         }
         try {
             st.insertSymbol(s);
+            at.nivel = s.nivel;
+            at2.name = s.name;
         }
         catch (AlreadyDefinedSymbolException e) {
             errSem.deteccion(e, t);
         }
-        at.nivel = s.nivel;
         st.insertBlock();
         at2.parList = at.parList;
+        at2.type = at1.type;
     }
     resto_declaracion_func_proc(at2)
     {
@@ -275,7 +277,7 @@ void declaracion_func_proc(Attributes at) :
         else {
             ((SymbolFunction) s).parList = at2.parList;
         }
-    } 
+    }
 }
 
 void resto_declaracion_func_proc(Attributes at) :
@@ -284,6 +286,8 @@ void resto_declaracion_func_proc(Attributes at) :
     Attributes at2 = new Attributes();
     Attributes at3 = new Attributes();
     at1.parList = at.parList;
+    at3.type = at.type;
+    at3.name = at.name;
 }
 {
     < tAP >
@@ -337,6 +341,7 @@ void lista_params(Attributes at) :
     Attributes at1 = new Attributes();
     at1.parList = at.parList;
     at1.type = at.type;
+    at1.name = at.name;
 }
 {
     parametro(at1)
@@ -350,9 +355,11 @@ void lista_params(Attributes at) :
 void instruccion(Attributes at) :
 {
     Attributes at1 = new Attributes();
+    at1.type = at.type;
+    at1.name = at.name;
 }
 {
-    inst_leer(at) < tPC >
+    inst_leer(at1) < tPC >
 |   inst_leer_linea(at1) < tPC >
 |   inst_escribir(at1) < tPC >
 |   inst_escribir_linea(at1) < tPC >
@@ -389,7 +396,7 @@ void inst_leer(Attributes at) :
 
 void inst_leer_linea(Attributes at) :
 {
-    Attributes at1 = new Attributes();
+    
 }
 {
     < tREADLN > < tAP > lista_cero_o_mas_asignables(at) < tCP >
@@ -410,7 +417,7 @@ void inst_asignacion(Attributes at) :
         try {
             s = st.getSymbol(at1.name);
             if (at1.type != Symbol.Types.INT && at1.type != Symbol.Types.BOOL && at1.type != Symbol.Types.CHAR && !at1.isCompVector) { 
-                errSem.deteccion("No es un asignable", t);
+                errSem.deteccion("No se pueden asignar ARRAY enteras", t);
             }
             if (at1.type != at2.type) {
                 errSem.deteccion("Tipos incompatibles en asignación: " + at1.type.name() + "/" + at2.type.name(), t);
@@ -429,6 +436,13 @@ void expresion(Attributes at) :
 }
 {
     relacion(at1)
+    { 
+        at.type = at1.type;
+        at.name = at1.name;
+        at.beginLine = at1.beginLine;
+        at.beginColumn = at1.beginColumn;
+        at2.type = at1.type;
+    }
     (mas_relacion(at2))?
 }
 
@@ -438,7 +452,18 @@ void mas_relacion(Attributes at) :
     Attributes at2 = new Attributes();
 }
 {
-    (and_or(at1) relacion(at2))+
+    (
+        and_or(at1) 
+        relacion(at2)
+        {
+            if (at.type != at2.type) {
+                errSem.deteccion("Tipos incompatibles en expresión: " + at.type.name() + "/" + at2.type.name(), at2);
+            }
+            if (at2.type != Symbol.Types.BOOL) {
+                errSem.deteccion("Tipos imcompatibles en expresión: BOOL/" + at2.type.name(), at2);
+            }
+        }
+    )+
 }
 
 void and_or(Attributes at) :
@@ -463,7 +488,9 @@ void relacion(Attributes at) :
         at.isConst = at1.isConst;
         at.isVar = at1.isVar;
         at.type = at1.type;
-        // ...
+        at.name = at1.name;
+        at.beginColumn = at1.beginColumn;
+        at.beginLine = at1.beginLine;
     }
     (
         operador_relacional(at2)
@@ -475,10 +502,11 @@ void relacion(Attributes at) :
             else {
                 at.type = Symbol.Types.UNDEFINED;
                 errSem.deteccion("Tipos incompatibles en expresión: " + at1.type.name() + "/" + at3.type.name(), at3);
-                // ...
             }
             at.isVar = false;
-            // ...
+            at.name = at3.name;
+            at.beginColumn = at3.beginColumn;
+            at.beginLine = at3.beginLine;
         }
     )?
 }
@@ -508,9 +536,31 @@ void expresion_simple(Attributes at) :
         op_MAS_MENOS(at1)
     )?
     termino(at2)
+    { 
+        at.type = at2.type; 
+        at.beginLine = at2.beginLine;
+        at.beginColumn = at2.beginColumn;
+        at.name = at2.name;
+    }
     (
         op_MAS_MENOS(at3)
         termino(at4)
+        {
+            if (at2.type == at4.type && at2.type == Symbol.Types.INT) {
+                at.type = at4.type;
+                at.name = at4.name;
+                at.beginLine = at4.beginLine;
+                at.beginColumn = at4.beginColumn;
+            }
+            else {
+                if (at2.type != Symbol.Types.INT) {
+                    errSem.deteccion("Tipos incompatibles en expresión: " + at2.type.name() + "/INT/" + at4.type.name(), at2);
+                }
+                else {
+                    errSem.deteccion("Tipos incompatibles en expresión: " + at2.type.name() + "/INT/" + at4.type.name(), at4);
+                }
+            }
+        }
     )*
 }
 
@@ -531,9 +581,31 @@ void termino(Attributes at) :
 }
 {
     factor(at1)
+    { 
+        at.type = at1.type; 
+        at.name = at1.name;
+        at.beginLine = at1.beginLine;
+        at.beginColumn = at1.beginColumn;
+    }
     (
         op_MULT(at2)
         factor(at3)
+        {
+            if (at1.type == at3.type && at1.type == Symbol.Types.INT) {
+                at.type = at3.type;
+                at.name = at3.name;
+                at.beginLine = at3.beginLine;
+                at.beginColumn = at3.beginColumn;
+            }
+            else {
+                if (at1.type != Symbol.Types.INT) {
+                    errSem.deteccion("Tipos incompatibles en expresión: " + at1.type.name() + "/INT/" + at3.type.name(), at1);
+                }
+                else {
+                    errSem.deteccion("Tipos incompatibles en expresión: " + at1.type.name() + "/INT/" + at3.type.name(), at3);
+                }
+            }
+        }
     )*
 }
 
@@ -553,8 +625,20 @@ void factor(Attributes at) :
 }
 {
     primario(at1)
+    { 
+        at.type = at1.type;
+        at.name = at1.name;
+        at.beginLine = at1.beginLine;
+        at.beginColumn = at1.beginColumn;
+    }
 |   < tNOT >
     primario(at1)
+    { 
+        at.type = at1.type;
+        at.name = at1.name;
+        at.beginLine = at1.beginLine;
+        at.beginColumn = at1.beginColumn;
+    }
 }
 
 void primario(Attributes at) :
@@ -585,14 +669,21 @@ void primario(Attributes at) :
     }
 |   LOOKAHEAD(2) t = < tID > < tAC > expresion(at1) < tCC >
     {
-        // ...
         Symbol s = null;
         try {
             s = st.getSymbol(t.image);
+            if (at1.type != Symbol.Types.INT) {
+                errSem.deteccion("El selector de un array debe ser de tipo entero", t);
+            }
+            at.name = s.name;  
         }
         catch (SymbolNotFoundException e) {
             errSem.deteccion(e, t);
         }
+        at.isCompVector = true;
+        at.type = ((SymbolArray) s).baseType;
+        at.beginLine = t.beginLine;
+        at.beginColumn = t.beginColumn;
     }
 |   t = < tID >
     {
@@ -607,46 +698,57 @@ void primario(Attributes at) :
         at.type = s.type;
         at.beginLine = t.beginLine;
         at.beginColumn = t.beginColumn;
+        at.name = t.image;
     }
 |   t = < tCONST_INT >
     {
+        at.type = Symbol.Types.INT;
         at.isVar = false;
         at.isConst = true;
         at.valInt = Integer.parseInt(t.image);
         at.beginLine = t.beginLine;
         at.beginColumn = t.beginColumn;
+        at.name = t.image;
     }
 |   t = < tCONST_CHAR >
     {
+        at.type = Symbol.Types.CHAR;
         at.isVar = false;
         at.isConst = true;
         at.valChar = t.image.charAt(0);
         at.beginLine = t.beginLine;
         at.beginColumn = t.beginColumn;
+        at.name = t.image;
     }
 |   t = < tSTRING >
     {
+        at.type = Symbol.Types.STRING;
         at.isVar = false;
         at.isConst = true;
         at.valString = t.image;
         at.beginLine = t.beginLine;
         at.beginColumn = t.beginColumn;
+        at.name = t.image;
     }
 |   t = < tTRUE >
     {
+        at.type = Symbol.Types.BOOL;
         at.isVar = false;
         at.isConst = true;
         at.valBool = true;
         at.beginLine = t.beginLine;
         at.beginColumn = t.beginColumn;
+        at.name = t.image;
     }
 |   t = < tFALSE >
     {
+        at.type = Symbol.Types.BOOL;
         at.isVar = false;
         at.isConst = true;
         at.valBool = false;
         at.beginLine = t.beginLine;
         at.beginColumn = t.beginColumn;
+        at.name = t.image;
     }
 }
 
@@ -671,20 +773,30 @@ void asignable(Attributes at) :
         at.isVar = true;
         at.isCompVector = true; 
         at.isConst = false;
+        at.name = t.image;
+        at.type = ((SymbolArray) s).baseType;
+        at.beginLine = t.beginLine;
+        at.beginColumn = t.beginColumn;
     }
 |   t = < tID >
     { 
         Symbol s = null;
         try {
             s = st.getSymbol(t.image);
-            // ...
+            at.name = s.name;
+            at.type = s.type;
         }
         catch (SymbolNotFoundException e) {
             errSem.deteccion(e, t);
         }
+        
         at.isVar = true;
         at.isCompVector = false; 
         at.isConst = false;
+        at.name = t.image;
+        at.type = s.type;
+        at.beginLine = t.beginLine;
+        at.beginColumn = t.beginColumn;
     }
 }
 
@@ -706,7 +818,6 @@ void tipo(Attributes at) :
 void inst_invoc_proc(Attributes at) :
 {
     Token t;
-    at.lExps = new ArrayList<Attributes>();
 }
 {
     t = < tID > 
@@ -731,10 +842,21 @@ void inst_seleccion(Attributes at) :
     Attributes at1 = new Attributes();
     Attributes at2 = new Attributes();
     Attributes at3 = new Attributes();
+    at2.type = at.type;
+    at2.name = at.name;
+    at3.type = at.type;
+    at3.name = at.name;
 }
 {
     < tIF > 
+    < tAP >
     expresion(at1) 
+    {
+        if (at1.type != Symbol.Types.BOOL) {
+            errSem.deteccion("La condición de un 'if' debe ser tipo 'boolean'", at1);
+        }
+    }
+    < tCP >
     < tAL > 
     (instruccion(at2))* 
     < tCL >
@@ -744,6 +866,8 @@ void inst_seleccion(Attributes at) :
 void bloque_else(Attributes at) :
 {
     Attributes at1 = new Attributes();
+    at1.type = at.type;
+    at1.name = at.name;
 }
 {
     < tELSE > 
@@ -756,10 +880,19 @@ void inst_iteracion(Attributes at) :
 {
     Attributes at1 = new Attributes();
     Attributes at2 = new Attributes();
+    at2.type = at.type;
+    at2.name = at.name;
 }
 {
     < tWHILE > 
+    < tAP >
     expresion(at1) 
+    {
+        if (at1.type != Symbol.Types.BOOL) {
+            errSem.deteccion("La condición de un 'while' debe ser de tipo 'boolean'", at1);
+        }
+    }
+    < tCP >
     < tAL > 
     (instruccion(at2))* 
     < tCL >
@@ -771,6 +904,11 @@ void inst_return(Attributes at) :
 }
 {
     < tRET > expresion(at1)
+    {
+        if (at.type != at1.type) {
+            errSem.deteccion("Instrucción return de la función " + at.name + " con tipo de dato incompatible: " + at.type.name() + "/" + at1.type.name(), at1);
+        }
+    }
 }
 
 void lista_cero_o_mas_exps(Attributes at) :
@@ -806,6 +944,13 @@ void lista_cero_o_mas_asignables(Attributes at) :
 }
 {
     (lista_uno_o_mas_asignables(at1))?
+    {
+        at.type = at1.type;
+        at.name = at1.name;
+        at.beginColumn = at1.beginColumn;
+        at.beginLine = at1.beginLine;
+    }
+
 }
 
 void lista_uno_o_mas_asignables(Attributes at) :
@@ -815,8 +960,29 @@ void lista_uno_o_mas_asignables(Attributes at) :
 }
 {
     asignable(at1)
+    {
+        if (at1.type != Symbol.Types.CHAR && at1.type != Symbol.Types.INT) {
+            errSem.deteccion("No se admite un argumento " + at1.type.name() + " en un 'read'", at1);
+        }
+        else {
+            at.type = at1.type;
+            at.name = at1.name;
+            at.beginColumn = at1.beginColumn;
+            at.beginLine = at1.beginLine;
+        }
+    }
     (
         < tC >
-        asignable(at2)
+        asignable(at2) {
+            if (at1.type != Symbol.Types.CHAR && at1.type != Symbol.Types.INT) {
+                errSem.deteccion("No se admite un argumento " + at2.type.name() + " en un 'read'", at2);
+            }
+            else {
+                at.type = at2.type;
+                at.name = at2.name;
+                at.beginColumn = at2.beginColumn;
+                at.beginLine = at2.beginLine;
+            }
+        }
     )*
 }

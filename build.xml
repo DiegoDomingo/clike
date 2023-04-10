@@ -69,7 +69,7 @@
 	<!-- Crear el jar con todo en ${dist} -->
 	<target name="dist" depends="compile">
 		<manifest file="${build_META_INF}/MANIFEST.MF" >
-	  		<attribute name="Class-Path" value="${lib}/*" />
+	  		<attribute name="Class-Path" value="${dir_traductor}/${project}.jar" />
 	    	<attribute name="Main-Class" value="${dir_traductor}/${main_class}" />  
  		</manifest>
 		<jar manifest="${build_META_INF}/MANIFEST.MF" jarfile="${dist}/${project}.jar" basedir="${build}" />

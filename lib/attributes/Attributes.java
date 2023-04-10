@@ -34,7 +34,7 @@ public class Attributes implements Cloneable {
     public int beginColumn;
 
     public Attributes() {
-        //COMPLETAR
+        this.lExps = new ArrayList<>();
     }
 
     public Attributes clone() {
