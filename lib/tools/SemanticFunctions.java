@@ -192,4 +192,331 @@ public class SemanticFunctions {
 		}
 	}
 
+    public void termino1(Attributes at, Attributes at1) {
+        at.type = at1.type; 
+        at.name = at1.name;
+        at.beginLine = at1.beginLine;
+        at.beginColumn = at1.beginColumn;
+        at.arraySize = at1.arraySize;
+        at.isCompVector = at1.isCompVector;
+        at.isVar = at1.isVar;
+        at.isConst = at1.isConst;
+        at.baseType = at1.baseType;
+    }
+
+    public void termino2(Attributes at, Attributes at1, Attributes at3) {
+        if (at1.type == at3.type && at1.type == Symbol.Types.INT) {
+            at.type = at3.type;
+            at.name = at3.name;
+            at.beginLine = at3.beginLine;
+            at.beginColumn = at3.beginColumn;
+            at.arraySize = at3.arraySize;
+            at.isCompVector = at3.isCompVector;
+            at.isVar = at3.isVar;
+            at.isConst = at3.isConst;
+            at.baseType = at3.baseType;
+        }
+        else {
+            if (at1.type != Symbol.Types.INT) {
+                errSem.deteccion("Tipos incompatibles en expresión: " + at1.type.name() + "/INT/" + at3.type.name(), at1);
+            }
+            else {
+                errSem.deteccion("Tipos incompatibles en expresión: " + at1.type.name() + "/INT/" + at3.type.name(), at3);
+            }
+        }
+    }
+
+    public void factor(Attributes at, Attributes at1) {
+        at.type = at1.type;
+        at.name = at1.name;
+        at.beginLine = at1.beginLine;
+        at.beginColumn = at1.beginColumn;
+        at.arraySize = at1.arraySize;
+        at.isCompVector = at1.isCompVector;
+        at.isVar = at1.isVar;
+        at.isConst = at1.isConst;
+        at.baseType = at1.baseType;
+    }
+
+    public void primario(Attributes at, Attributes at1){
+        at.type = at1.type;
+        at.name = at1.name;
+        at.beginLine = at1.beginLine;
+        at.beginColumn = at1.beginColumn;
+        at.arraySize = at1.arraySize;
+        at.isCompVector = at1.isCompVector;
+        at.isVar = at1.isVar;
+        at.isConst = at1.isConst;
+        at.baseType = at1.baseType;
+    }
+
+    public void int2char(Attributes at, Attributes at1) {
+        if (at1.type != Symbol.Types.INT) {
+            errSem.deteccion("'int2char' requiere una expresión 'int'", at1);
+            at.type = Symbol.Types.UNDEFINED;
+        }
+        else {
+            at.type = Symbol.Types.CHAR;
+        }
+        at.name = at1.name;
+        at.beginLine = at1.beginLine;
+        at.beginColumn = at1.beginColumn;
+        at.arraySize = at1.arraySize;
+        at.isCompVector = at1.isCompVector;
+        at.isVar = at1.isVar;
+        at.isConst = at1.isConst;
+        at.baseType = at1.baseType;
+    }
+
+    public void char2int(Attributes at, Attributes at1) {
+        if (at1.type != Symbol.Types.CHAR) {
+            errSem.deteccion("'char2int' requiere una expresión 'character'", at1);
+            at.type = Symbol.Types.UNDEFINED;
+        }
+        else {
+            at.type = Symbol.Types.INT;
+        }
+        at.name = at1.name;
+        at.beginLine = at1.beginLine;
+        at.beginColumn = at1.beginColumn;
+        at.arraySize = at1.arraySize;
+        at.isCompVector = at1.isCompVector;
+        at.isVar = at1.isVar;
+        at.isConst = at1.isConst;
+        at.baseType = at1.baseType;
+    }
+
+    public void invoc_func(Token t, Attributes at, SymbolTable st) {
+        Symbol s = null;
+        try {
+            s = st.getSymbol(t.image);
+            if (!(s instanceof SymbolFunction)) {
+                errSem.deteccion("Tiene que ser una invocación a función", t);
+            }
+        }
+        catch (SymbolNotFoundException e) {
+            errSem.deteccion(e, t);
+        }
+        at.isVar = false;
+        at.type = ((SymbolFunction) s).returnType;
+        ArrayList<Symbol> parametros = ((SymbolFunction) s).parList;
+        if (parametros.size() != at.lExps.size()) {
+            errSem.deteccion("Diferente número de parámetros reales y formales", t);
+        }
+        else {
+            for (int i = 0; i < at.lExps.size() && i < parametros.size(); i++) {
+                if (at.lExps.get(i).type != parametros.get(i).type) {
+                    errSem.deteccion("Incompatibilidad de tipos entre parámetro formal y real", t);
+                }
+                else {
+                    if (parametros.get(i).parClass == Symbol.ParameterClass.REF) {
+                        if (!at.lExps.get(i).isVar && !at.lExps.get(i).isCompVector) {
+                            errSem.deteccion("El parámetro real para un paso por referencia tiene que ser un asignable", t);
+                        }
+                    }
+                    if (parametros.get(i).type == Symbol.Types.ARRAY) {
+                        if (((SymbolArray) parametros.get(i)).baseType != at.lExps.get(i).baseType) {
+                            errSem.deteccion("Incompatibilidad de tipos entre parámetro formal y real", t);
+                        }
+                        if (((SymbolArray) parametros.get(i)).maxInd+1 != at.lExps.get(i).arraySize) {
+                            errSem.deteccion("El parámetro real tiene que ser un vector compatible con el formal", t);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void comp_vector(Token t, Attributes at, Attributes at1, SymbolTable st) {
+        Symbol s = null;
+        try {
+            s = st.getSymbol(t.image);
+            if (at1.type != Symbol.Types.INT) {
+                errSem.deteccion("El selector de un array debe ser de tipo entero", t);
+            }
+            at.name = s.name;  
+        }
+        catch (SymbolNotFoundException e) {
+            errSem.deteccion(e, t);
+        }
+        at.isCompVector = true;
+        at.isVar = true;
+        at.isConst = false;
+        at.type = ((SymbolArray) s).baseType;
+        at.beginLine = t.beginLine;
+        at.beginColumn = t.beginColumn;
+    }
+
+    public void identificador(Token t, Attributes at, SymbolTable st) {
+        Symbol s = null;
+        try {
+            s = st.getSymbol(t.image);
+        }
+        catch (SymbolNotFoundException e) {
+            errSem.deteccion(e, t);
+        }
+        if (s.type == Symbol.Types.ARRAY) {
+            at.arraySize = ((SymbolArray) s).maxInd + 1;
+            at.baseType = ((SymbolArray) s).baseType;
+        }
+        at.type = s.type;
+        at.isVar = true;
+        at.isCompVector = false;
+        at.isConst = false;
+        at.beginLine = t.beginLine;
+        at.beginColumn = t.beginColumn;
+        at.name = t.image;
+    }
+
+    public void const_int(Attributes at, Token t) {
+        at.type = Symbol.Types.INT;
+        at.isVar = false;
+        at.isCompVector = false;
+        at.isConst = true;
+        at.valInt = Integer.parseInt(t.image);
+        at.beginLine = t.beginLine;
+        at.beginColumn = t.beginColumn;
+        at.name = t.image;
+    }
+
+    public void const_char(Attributes at, Token t) {
+        at.type = Symbol.Types.CHAR;
+        at.isVar = false;
+        at.isCompVector = false;
+        at.isConst = true;
+        at.valChar = t.image.charAt(0);
+        at.beginLine = t.beginLine;
+        at.beginColumn = t.beginColumn;
+        at.name = t.image;
+    }
+
+    public void string(Attributes at, Token t) {
+        at.type = Symbol.Types.STRING;
+        at.isVar = false;
+        at.isCompVector = false;
+        at.isConst = true;
+        at.valString = t.image;
+        at.beginLine = t.beginLine;
+        at.beginColumn = t.beginColumn;
+        at.name = t.image;
+    }
+
+    public void const_bool_true(Token t, Attributes at) {
+        at.type = Symbol.Types.BOOL;
+        at.isVar = false;
+        at.isCompVector = false;
+        at.isConst = true;
+        at.valBool = true;
+        at.beginLine = t.beginLine;
+        at.beginColumn = t.beginColumn;
+        at.name = t.image;
+    }
+
+    public void const_bool_false(Token t, Attributes at) {
+        at.type = Symbol.Types.BOOL;
+        at.isVar = false;
+        at.isCompVector = false;
+        at.isConst = true;
+        at.valBool = false;
+        at.beginLine = t.beginLine;
+        at.beginColumn = t.beginColumn;
+        at.name = t.image;
+    }
+
+    public void asignable_comp_vector(Token t, Attributes at, Attributes at1, SymbolTable st) {
+        Symbol s = null;
+        try {
+            s = st.getSymbol(t.image);
+            if (at1.type != Symbol.Types.INT) {
+                errSem.deteccion("El selector de un array debe ser de tipo INT", t);
+            }
+        }
+        catch (SymbolNotFoundException e) {
+            errSem.deteccion(e, t);
+        }
+        at.isVar = true;
+        at.isCompVector = true; 
+        at.isConst = false;
+        at.name = t.image;
+        at.type = ((SymbolArray) s).baseType;
+        at.beginLine = t.beginLine;
+        at.beginColumn = t.beginColumn;
+    }
+
+    public void asignable(Token t, Attributes at, SymbolTable st) {
+        Symbol s = null;
+        try {
+            s = st.getSymbol(t.image);
+            at.name = s.name;
+            at.type = s.type;
+        }
+        catch (SymbolNotFoundException e) {
+            errSem.deteccion(e, t);
+        }
+        at.isVar = true;
+        at.isCompVector = false; 
+        at.isConst = false;
+        at.name = t.image;
+        at.type = s.type;
+        at.beginLine = t.beginLine;
+        at.beginColumn = t.beginColumn;
+    }
+
+    public void inst_invoc_proc(Token t, Attributes at, SymbolTable st) {
+        Symbol s = null;
+        try {
+            s = st.getSymbol(t.image);
+            if (s.name.contentEquals("main")) {
+                errSem.deteccion("No se puede invocar a 'main'", t);
+            }
+        }
+        catch (SymbolNotFoundException e) {
+            errSem.deteccion(e, t);
+        }
+        ArrayList<Symbol> parametros = ((SymbolProcedure) s).parList;
+        if (parametros.size() != at.lExps.size()) {
+            errSem.deteccion("Diferente número de parámetros reales y formales", t);
+        }
+        else {
+            for (int i = 0; i < at.lExps.size() && i < parametros.size(); i++) {
+                if (at.lExps.get(i).type != parametros.get(i).type) {
+                    errSem.deteccion("Incompatibilidad de tipos entre parámetro formal y real", t);
+                }
+                else {
+                    if (parametros.get(i).parClass == Symbol.ParameterClass.REF) {
+                        if (!at.lExps.get(i).isVar && !at.lExps.get(i).isCompVector) {
+                            errSem.deteccion("El parámetro real para un paso por referencia tiene que ser un asignable", t);
+                        }
+                    }
+                    if (parametros.get(i).type == Symbol.Types.ARRAY) {
+                        if (((SymbolArray) parametros.get(i)).baseType != at.lExps.get(i).baseType) {
+                            errSem.deteccion("Incompatibilidad de tipos entre parámetro formal y real", t);
+                        }
+                        if (((SymbolArray) parametros.get(i)).maxInd+1 != at.lExps.get(i).arraySize) {
+                            errSem.deteccion("El parámetro real tiene que ser un vector compatible con el formal", t);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void lista_cero_o_mas_asignables(Attributes at, Attributes at1) {
+        at.type = at1.type;
+        at.name = at1.name;
+        at.beginColumn = at1.beginColumn;
+        at.beginLine = at1.beginLine;
+    }
+
+    public void lista_uno_o_mas_asignables(Attributes at, Attributes at2) {
+        if (at2.type != Symbol.Types.CHAR && at2.type != Symbol.Types.INT) {
+            errSem.deteccion("No se admite un argumento " + at2.type.name() + " en un 'read'", at2);
+        }
+        else {
+            at.type = at2.type;
+            at.name = at2.name;
+            at.beginColumn = at2.beginColumn;
+            at.beginLine = at2.beginLine;
+        }
+    }
 }
