@@ -14,6 +14,7 @@ import java.util.AbstractMap.SimpleEntry;
 
 public class Attributes implements Cloneable {
     public Symbol.Types type;
+    public Symbol.Types baseType;
     public Symbol.ParameterClass parClass;
 
     public int valInt;
@@ -28,11 +29,12 @@ public class Attributes implements Cloneable {
     public boolean isVar;
     public boolean isCompVector;
     public boolean isConst;
+    public int arraySize;
     public int nivel;
 
     public int beginLine;
     public int beginColumn;
-
+    
     public Attributes() {
         this.lExps = new ArrayList<>();
     }
