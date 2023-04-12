@@ -36,4 +36,5 @@ public class SymbolFunction extends Symbol implements Cloneable {
     	newSymbolFunction.parList = new ArrayList<Symbol> (parList); 
     	return newSymbolFunction; 
     }
+    
 }

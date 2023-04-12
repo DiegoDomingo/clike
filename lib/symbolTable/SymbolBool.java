@@ -8,6 +8,7 @@
 package lib.symbolTable;
 
 public class SymbolBool extends Symbol implements Cloneable {
+
     public boolean value;
 
     public SymbolBool(String _name) {
@@ -32,4 +33,5 @@ public class SymbolBool extends Symbol implements Cloneable {
     public SymbolBool clone () {
     	return (SymbolBool) super.clone(); 
     }
+    
 }

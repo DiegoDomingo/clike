@@ -8,6 +8,7 @@
 package lib.symbolTable;
 
 public class SymbolArray extends Symbol implements Cloneable {
+
     public int minInd;
     public int maxInd;
     public Types baseType;

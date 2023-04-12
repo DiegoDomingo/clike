@@ -1,12 +1,12 @@
-Compilador clike.jar (V1.0)
+Compilador clike_4.jar (V1.0)
 Autores: Pablo Cervera López (815538)
          Diego Domingo Ralla (818637)
 -------------------------------------------------------------
-Análisis léxico y sintáctico
+Análisis léxico, sintáctico y semántico
 
 Invocar como:
 -------------------------------------------------------------
-java -jar clike.jar <fichero_fuente_clike>
+java -jar clike_4.jar <fichero_fuente_clike>
 -------------------------------------------------------------
 
 Si se invoca sin parámetros, lee la entrada estándar.
@@ -20,7 +20,7 @@ Características generales:
 4) No se pueden intercalar instrucciones con declaraciones dentro de una
    func/proc: primero las declaraciones de variables, luego las instrucciones
 
-Decisiones de diseño:
+Decisiones de diseño análisis sintáctico:
 -------------------------------------------------------------
 Se ha partido de la gramática parcial para clike proporcionada, que ha sido
 adaptada añadiendo las producciones que se han considerado necesarias. Algunas
@@ -38,9 +38,23 @@ decisiones de diseño han sido:
 - Se ha considerado que una instrucción if puede o no tener un bloque else, que
   se ha tratado con una producción específica para este.
 
-En el fichero tests.zip se incluyen tres programas de test en clike, todos ellos
-correctos tanto sintáctica como semánticamente, con el fin de comprobar que el
-análisis léxico y semántico es correcto.
+Lenguaje aceptado semánticamente:
+-------------------------------------------------------------
+El lenguaje permite el uso de parámetros escalares y de vectores, tanto por
+valor como por referencia en procedimientos y funciones.
 
-Al ejecutar el programa clike se mostrará la salida del analizador léxico, y en
-caso de no haber errores sintácticos, se mostrará al final un mensaje de éxito.
+En el directorio lib se han incluido las siguientes clases:
+- Las relacionadas con la tabla de símbolos (SymbolTable), la estructura de
+  datos donde se insertarán los distintos símbolos (Symbol) presentes en un
+  programa. Se incluye una implementación de Symbol para cada tipo de dato 
+  aceptado por el lenguaje clike.
+- Clase Attributes, que recoge los distintos atributos asociados a un símbolo
+  de una gramática.
+- Clase SemanticFunctions, donde se recogen los distintos métodos y funciones de 
+  las comprobaciones semánticas realizadas en cada una de las producciones de la
+  gramática realizada.
+- Clase ErrorSemantico, para mostrar los distintos errores semánticos que se 
+  pueden producir.
+
+Al ejecutar el programa clike se mostrará el contenido de la tabla de símbolos
+al procesar cada uno de los procedimientos y funciones del programa.

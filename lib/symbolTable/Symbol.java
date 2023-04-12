@@ -12,6 +12,7 @@ package lib.symbolTable;
 
 
 abstract public class Symbol implements Cloneable {
+    
     static public enum ParameterClass {
         VAL, REF, NONE
     }
@@ -59,4 +60,3 @@ abstract public class Symbol implements Cloneable {
     abstract public String toString();
 
 }
-

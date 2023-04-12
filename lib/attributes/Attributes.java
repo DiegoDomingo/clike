@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.AbstractMap.SimpleEntry;
 
 public class Attributes implements Cloneable {
+
     public Symbol.Types type;
     public Symbol.Types baseType;
     public Symbol.ParameterClass parClass;
@@ -54,4 +55,5 @@ public class Attributes implements Cloneable {
             "parClass = " + parClass + "\n";
             //COMPLETAR
     }
+    
 }

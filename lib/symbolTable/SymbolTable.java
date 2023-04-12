@@ -23,6 +23,7 @@ import lib.symbolTable.exceptions.SymbolNotFoundException;
 import lib.symbolTable.exceptions.AlreadyDefinedSymbolException;
 
 public class SymbolTable {
+    
 	private final int ST_SIZE = 16; //hasta 16 niveles
     private final int HASH_SIZE = 1024; //buckets
     private ArrayList<HashMap<String, Symbol>> st;
@@ -123,4 +124,5 @@ public class SymbolTable {
         builder.append(linea); 
         return builder.toString();
     }
+
 }

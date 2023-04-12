@@ -19,8 +19,8 @@
 	</description>
 
 	<!-- El fuente de jcc será ${project}.jj, y generará  ${project}.tar -->
-	<property name="project" value="clike"/>
-	<property name="main_class" value="clike"/>
+	<property name="project" value="clike_4"/>
+	<property name="main_class" value="clike_4"/>
 	<!--<property name="java_compiler" value="/usr/lib/jvm/java-8-openjdk-amd64/bin/javac"/> -->
 	<property name="java_compiler" value="javac"/>
 

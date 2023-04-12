@@ -8,6 +8,7 @@
 package lib.symbolTable;
 
 public class SymbolChar extends Symbol implements Cloneable {
+
     public char value;
 
     public SymbolChar(String _name) {
@@ -34,4 +35,5 @@ public class SymbolChar extends Symbol implements Cloneable {
     public SymbolChar clone () {
     	return (SymbolChar) super.clone(); 
     }
+    
 }

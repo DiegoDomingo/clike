@@ -15,6 +15,7 @@ import lib.attributes.Attributes;
 import lib.symbolTable.exceptions.*; 
 
 public class ErrorSemantico {
+	
 	final static String sep = "*************************************************************************";
 
 	private static int contadorErrores = 0;

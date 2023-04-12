@@ -92,7 +92,6 @@ public class SemanticFunctions {
             try {
                 st.insertSymbol(s);
                 at.nivel = s.nivel;
-                at2.name = s.name;
             }
             catch (AlreadyDefinedSymbolException e) {
                 errSem.deteccion(e, t);
@@ -101,6 +100,7 @@ public class SemanticFunctions {
             at2.parList = at.parList;
             at2.type = at1.type;
         }
+        at2.name = t.image;
 		return s;
 	}
 
@@ -171,7 +171,7 @@ public class SemanticFunctions {
 	}
 
 	public void expresion_simple2(Attributes at, Attributes at2, Attributes at4) {
-		if (at2.type == at4.type && at2.type == Symbol.Types.INT) {
+		if ((at2.type == at4.type && at2.type == Symbol.Types.INT) || at2.type == Symbol.Types.UNDEFINED || at4.type == Symbol.Types.UNDEFINED) {
 			at.type = at4.type;
 			at.name = at4.name;
 			at.beginLine = at4.beginLine;
@@ -189,6 +189,7 @@ public class SemanticFunctions {
 			else {
 				errSem.deteccion("Tipos incompatibles en expresión: " + at2.type.name() + "/INT/" + at4.type.name(), at4);
 			}
+            at.type = Symbol.Types.INT;
 		}
 	}
 
@@ -205,7 +206,7 @@ public class SemanticFunctions {
     }
 
     public void termino2(Attributes at, Attributes at1, Attributes at3) {
-        if (at1.type == at3.type && at1.type == Symbol.Types.INT) {
+        if ((at1.type == at3.type && at1.type == Symbol.Types.INT) || at1.type == Symbol.Types.UNDEFINED || at3.type == Symbol.Types.UNDEFINED) {
             at.type = at3.type;
             at.name = at3.name;
             at.beginLine = at3.beginLine;
@@ -223,11 +224,30 @@ public class SemanticFunctions {
             else {
                 errSem.deteccion("Tipos incompatibles en expresión: " + at1.type.name() + "/INT/" + at3.type.name(), at3);
             }
+            at.type = Symbol.Types.INT;
         }
     }
 
-    public void factor(Attributes at, Attributes at1) {
+    public void factor1(Attributes at, Attributes at1) {
         at.type = at1.type;
+        at.name = at1.name;
+        at.beginLine = at1.beginLine;
+        at.beginColumn = at1.beginColumn;
+        at.arraySize = at1.arraySize;
+        at.isCompVector = at1.isCompVector;
+        at.isVar = at1.isVar;
+        at.isConst = at1.isConst;
+        at.baseType = at1.baseType;
+    }
+
+    public void factor2(Attributes at, Attributes at1) {
+        if (at1.type != Symbol.Types.BOOL) {
+            errSem.deteccion("'not' requiere una expresión 'boolean'", at1);
+            at.type = Symbol.Types.UNDEFINED;
+        }
+        else {
+            at.type = at1.type;
+        }
         at.name = at1.name;
         at.beginLine = at1.beginLine;
         at.beginColumn = at1.beginColumn;
@@ -293,37 +313,39 @@ public class SemanticFunctions {
             if (!(s instanceof SymbolFunction)) {
                 errSem.deteccion("Tiene que ser una invocación a función", t);
             }
-        }
-        catch (SymbolNotFoundException e) {
-            errSem.deteccion(e, t);
-        }
-        at.isVar = false;
-        at.type = ((SymbolFunction) s).returnType;
-        ArrayList<Symbol> parametros = ((SymbolFunction) s).parList;
-        if (parametros.size() != at.lExps.size()) {
-            errSem.deteccion("Diferente número de parámetros reales y formales", t);
-        }
-        else {
-            for (int i = 0; i < at.lExps.size() && i < parametros.size(); i++) {
-                if (at.lExps.get(i).type != parametros.get(i).type) {
-                    errSem.deteccion("Incompatibilidad de tipos entre parámetro formal y real", t);
+            else {
+                at.isVar = false;
+                at.type = ((SymbolFunction) s).returnType;
+                ArrayList<Symbol> parametros = ((SymbolFunction) s).parList;
+                if (parametros.size() != at.lExps.size()) {
+                    errSem.deteccion("Diferente número de parámetros reales y formales", t);
                 }
                 else {
-                    if (parametros.get(i).parClass == Symbol.ParameterClass.REF) {
-                        if (!at.lExps.get(i).isVar && !at.lExps.get(i).isCompVector) {
-                            errSem.deteccion("El parámetro real para un paso por referencia tiene que ser un asignable", t);
-                        }
-                    }
-                    if (parametros.get(i).type == Symbol.Types.ARRAY) {
-                        if (((SymbolArray) parametros.get(i)).baseType != at.lExps.get(i).baseType) {
+                    for (int i = 0; i < at.lExps.size() && i < parametros.size(); i++) {
+                        if (at.lExps.get(i).type != parametros.get(i).type) {
                             errSem.deteccion("Incompatibilidad de tipos entre parámetro formal y real", t);
                         }
-                        if (((SymbolArray) parametros.get(i)).maxInd+1 != at.lExps.get(i).arraySize) {
-                            errSem.deteccion("El parámetro real tiene que ser un vector compatible con el formal", t);
+                        else {
+                            if (parametros.get(i).parClass == Symbol.ParameterClass.REF) {
+                                if (!at.lExps.get(i).isVar && !at.lExps.get(i).isCompVector) {
+                                    errSem.deteccion("El parámetro real para un paso por referencia tiene que ser un asignable", t);
+                                }
+                            }
+                            if (parametros.get(i).type == Symbol.Types.ARRAY) {
+                                if (((SymbolArray) parametros.get(i)).baseType != at.lExps.get(i).baseType) {
+                                    errSem.deteccion("Incompatibilidad de tipos entre parámetro formal y real", t);
+                                }
+                                if (((SymbolArray) parametros.get(i)).maxInd+1 != at.lExps.get(i).arraySize) {
+                                    errSem.deteccion("El parámetro real tiene que ser un vector compatible con el formal", t);
+                                }
+                            }
                         }
                     }
                 }
             }
+        }
+        catch (SymbolNotFoundException e) {
+            errSem.deteccion(e, t);
         }
     }
 
@@ -332,7 +354,7 @@ public class SemanticFunctions {
         try {
             s = st.getSymbol(t.image);
             if (at1.type != Symbol.Types.INT) {
-                errSem.deteccion("El selector de un array debe ser de tipo entero", t);
+                errSem.deteccion("El selector de un array debe ser de tipo entero", t); // TODO: preguntar
             }
             at.name = s.name;  
         }
@@ -519,4 +541,5 @@ public class SemanticFunctions {
             at.beginLine = at2.beginLine;
         }
     }
+    
 }

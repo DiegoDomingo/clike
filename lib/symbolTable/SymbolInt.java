@@ -8,6 +8,7 @@
 package lib.symbolTable;
 
 public class SymbolInt extends Symbol implements Cloneable {
+    
     public int value;
     
     public SymbolInt(String _name) {
