@@ -46,7 +46,7 @@ public class clike {
 			}
 			// Programa es el símbolo inicial de la gramática
 			parser.Programa();
-			System.out.println("***** Análisis terminado con éxito *****");
+			System.out.println("Compilación finalizada. Se ha generado el fichero " + args[0] + ".pcode");
 		}
 		catch (java.io.FileNotFoundException e) {
 			System.err.println("Fichero " + args[0] + " no encontrado.");
@@ -137,8 +137,10 @@ SPECIAL_TOKEN : {
 void Programa() :
 {
     Attributes at = new Attributes();
-}
+    CodeBlock programa;
+} 
 {
+    { programa = new CodeBlock(); }
 	(declaracion(at))+
 	< EOF >
 }
@@ -236,10 +238,6 @@ void resto_declaracion_func_proc(Attributes at) :
     (instruccion(at3))+
     < tCL >
     {
-        System.err.println("************************************************");
-        System.err.println("Procesando " + at.name);
-        System.err.println("************************************************");
-        System.err.println(st.toString());
         st.removeBlock();
     }
 }
@@ -546,9 +544,15 @@ void primario(Attributes at) :
 |   t = < tSTRING >
     { sf.string(at, t); }
 |   t = < tTRUE >
-    { sf.const_bool_true(t, at); }
+    { 
+        // writeInst(STC,1);
+        sf.const_bool_true(t, at); 
+    }
 |   t = < tFALSE >
-    { sf.const_bool_false(t, at); }
+    { 
+        // writeInst(STC,0);
+        sf.const_bool_true(t, at); 
+    }
 }
 
 void asignable(Attributes at) :
