@@ -11,6 +11,7 @@ package lib.attributes;
 import lib.symbolTable.*;
 import java.util.ArrayList;
 import java.util.AbstractMap.SimpleEntry;
+import lib.tools.codeGeneration.CodeBlock;
 
 public class Attributes implements Cloneable {
 
@@ -23,7 +24,7 @@ public class Attributes implements Cloneable {
     public char valChar;
     public String valString;
 
-    public String code;
+    public CodeBlock code;
     public String name;
     public ArrayList<Symbol> parList;
     public ArrayList<Attributes> lExps;
@@ -37,6 +38,7 @@ public class Attributes implements Cloneable {
     public int beginColumn;
     
     public Attributes() {
+        this.code = new CodeBlock();
         this.lExps = new ArrayList<>();
     }
 

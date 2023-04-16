@@ -42,7 +42,6 @@ public class SemanticFunctions {
         catch (AlreadyDefinedSymbolException e){
             errSem.deteccion(e, t1);
         }
-        at.code = t1.image + "[" + t2.image + "]";
 	}
 
 	public void variable(Token t1, Attributes at, SymbolTable st) {
@@ -76,7 +75,6 @@ public class SemanticFunctions {
         catch (AlreadyDefinedSymbolException e) {
             errSem.deteccion(e, t1);
         }
-        at.code = t1.image;
 	}
 
 	public Symbol declaracion_func_proc(Token t, Attributes at, Attributes at1, Attributes at2, SymbolTable st) {
@@ -114,6 +112,24 @@ public class SemanticFunctions {
         }
         at3.parList = at.parList;  
 	}
+
+    public void inst_asignacion(Token t, Attributes at, Attributes at1, Attributes at2, SymbolTable st) {
+        Symbol s = null;
+        try {
+            s = st.getSymbol(at1.name);
+            if (at1.type != Symbol.Types.UNDEFINED && at2.type != Symbol.Types.UNDEFINED) {
+                if (at1.type != Symbol.Types.INT && at1.type != Symbol.Types.BOOL && at1.type != Symbol.Types.CHAR && !at1.isCompVector) { 
+                    errSem.deteccion("No se puede asignar a " + at1.type.name(), t);
+                }
+                if (at1.type != at2.type) {
+                    errSem.deteccion("Tipos incompatibles en asignación: " + at1.type.name() + "/" + at2.type.name(), t);
+                }
+            }
+        }
+        catch (SymbolNotFoundException e) {
+            errSem.deteccion(e, t);
+        }
+    }
 
 	public void expresion(Attributes at, Attributes at1, Attributes at2) {
 		at.type = at1.type;
@@ -158,8 +174,11 @@ public class SemanticFunctions {
 		at.baseType = at3.baseType;
 	}
 
-	public void expresion_simple1(Attributes at, Attributes at2) {
-		at.type = at2.type; 
+	public void expresion_simple1(Attributes at, Attributes at1, Attributes at2) {
+        if (at1.type == Symbol.Types.INT && at2.type != Symbol.Types.INT) {
+            errSem.deteccion("Tipos incompatibles en expresión: INT/" + at2.type.name(), at2);
+        }
+        at.type = at2.type; 
         at.beginLine = at2.beginLine;
         at.beginColumn = at2.beginColumn;
         at.name = at2.name;
@@ -463,6 +482,7 @@ public class SemanticFunctions {
         at.type = ((SymbolArray) s).baseType;
         at.beginLine = t.beginLine;
         at.beginColumn = t.beginColumn;
+        at.nivel = st.level - s.nivel;
     }
 
     public void asignable(Token t, Attributes at, SymbolTable st) {
