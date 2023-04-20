@@ -632,7 +632,6 @@ void primario(Attributes at) :
     { 
         sf.identificador(t, at, st);
         // FIXME: at.code.addInst(PCodeInstruction.OpCode.SRF, ??, ??);
-        // FIXME: COMPROBAR REFERENCIA
         at.code.addInst(PCodeInstruction.OpCode.DRF);
     }
 |   t = < tCONST_INT >
@@ -704,7 +703,8 @@ void inst_invoc_proc(Attributes at) :
     lista_cero_o_mas_exps(at)
     < tCP >
     { 
-        sf.inst_invoc_proc(t, at, st); 
+        sf.inst_invoc_proc(t, at, st);
+
     }
 }
 
@@ -719,7 +719,7 @@ void inst_seleccion(Attributes at) :
     at3.name = at.name;
 }
 {
-    < tIF > 
+    < tIF >
     < tAP >
     expresion(at1) 
     {
@@ -821,9 +821,7 @@ void lista_cero_o_mas_exps(Attributes at) :
 }
 {
     (lista_una_o_mas_exps(at1))?
-    {
-        at.lExps = at1.lExps;
-    }
+    { at.lExps = at1.lExps; }
 }
 
 void lista_una_o_mas_exps(Attributes at) :
@@ -834,7 +832,7 @@ void lista_una_o_mas_exps(Attributes at) :
     expresion(at1)
     { 
         at.lExps.add(at1); 
-        at.code.addBlock(at1.code);
+        // at.code.addBlock(at1.code);
     }
     (
         < tC >
@@ -842,7 +840,7 @@ void lista_una_o_mas_exps(Attributes at) :
         expresion(at2)
         { 
             at.lExps.add(at2); 
-            at.code.addBlock(at2.code);
+            // at.code.addBlock(at2.code);
         }
     )*
 }

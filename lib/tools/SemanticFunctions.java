@@ -529,6 +529,7 @@ public class SemanticFunctions {
                         if (!at.lExps.get(i).isVar && !at.lExps.get(i).isCompVector) {
                             errSem.deteccion("El parámetro real para un paso por referencia tiene que ser un asignable", t);
                         }
+                        at.lExps.get(i).code.removeLastInst();
                     }
                     if (parametros.get(i).type == Symbol.Types.ARRAY) {
                         if (((SymbolArray) parametros.get(i)).baseType != at.lExps.get(i).baseType) {
@@ -538,6 +539,7 @@ public class SemanticFunctions {
                             errSem.deteccion("El parámetro real tiene que ser un vector compatible con el formal", t);
                         }
                     }
+                    at.addBlock(at.lExps.get(i).code);
                 }
             }
         }
