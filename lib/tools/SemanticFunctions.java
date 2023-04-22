@@ -15,7 +15,7 @@ import lib.attributes.*;
 import lib.symbolTable.*;
 import lib.symbolTable.exceptions.*;
 import lib.errores.*;
-import lib.codeGeneration.*;
+import lib.tools.codeGeneration.*;
 
 public class SemanticFunctions {
 
@@ -93,6 +93,7 @@ public class SemanticFunctions {
             }
             try {
                 s.label = CGUtils.newLabel();
+                at.code.addLabel(s.label);
                 st.insertSymbol(s);
                 at.nivel = s.nivel;
             }
@@ -355,6 +356,7 @@ public class SemanticFunctions {
                                 if (!at.lExps.get(i).isVar && !at.lExps.get(i).isCompVector) {
                                     errSem.deteccion("El parámetro real para un paso por referencia tiene que ser un asignable", t);
                                 }
+                                at.lExps.get(i).code.removeLastInst();
                             }
                             if (parametros.get(i).type == Symbol.Types.ARRAY) {
                                 if (((SymbolArray) parametros.get(i)).baseType != at.lExps.get(i).baseType) {
@@ -364,9 +366,11 @@ public class SemanticFunctions {
                                     errSem.deteccion("El parámetro real tiene que ser un vector compatible con el formal", t);
                                 }
                             }
+                            at.code.addBlock(at.lExps.get(i).code);
                         }
                     }
                 }
+                at.code.addOSFInst(CGUtils.memorySpaces[st.level] + 3, st.level - s.nivel, s.label);
             }
         }
         catch (SymbolNotFoundException e) {
@@ -379,7 +383,7 @@ public class SemanticFunctions {
         try {
             s = st.getSymbol(t.image);
             if (at1.type != Symbol.Types.INT) {
-                errSem.deteccion("El selector de un array debe ser de tipo entero", t); // TODO: preguntar
+                errSem.deteccion("El selector de un array debe ser de tipo entero", t);
             }
             at.name = s.name;  
         }
@@ -491,6 +495,9 @@ public class SemanticFunctions {
         at.beginLine = t.beginLine;
         at.beginColumn = t.beginColumn;
         at.nivel = st.level - s.nivel;
+        at.code.addBlock(at1.code);
+        at.code.addInst(PCodeInstruction.OpCode.SRF, st.level - s.nivel, s.dir);
+        at.code.addInst(PCodeInstruction.OpCode.PLUS);
     }
 
     public void asignable(Token t, Attributes at, SymbolTable st) {
@@ -510,6 +517,7 @@ public class SemanticFunctions {
         at.type = s.type;
         at.beginLine = t.beginLine;
         at.beginColumn = t.beginColumn;
+        at.code.addInst(PCodeInstruction.OpCode.SRF, st.level - s.nivel, s.dir);
     }
 
     public void inst_invoc_proc(Token t, Attributes at, SymbolTable st) {
@@ -547,9 +555,10 @@ public class SemanticFunctions {
                             errSem.deteccion("El parámetro real tiene que ser un vector compatible con el formal", t);
                         }
                     }
-                    at.addBlock(at.lExps.get(i).code);
+                    at.code.addBlock(at.lExps.get(i).code);
                 }
             }
+            at.code.addOSFInst(CGUtils.memorySpaces[st.level] + 3, st.level - s.nivel, s.label);
         }
     }
 

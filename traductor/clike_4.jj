@@ -230,10 +230,21 @@ void declaracion_func_proc(Attributes at) :
         if (!t.image.contentEquals("main")) {
             if (at1.type == Symbol.Types.PROCEDURE) {
                 ((SymbolProcedure) s).parList = at2.parList;
+                ArrayList<Symbol> parametros = ((SymbolProcedure) s).parList;
+                for (int i = parametros.size() - 1; i >= 0; i--) {
+                    at.code.addInst(PCodeInstruction.OpCode.SRF, 0, parametros.get(i).dir);
+                    at.code.addInst(PCodeInstruction.OpCode.ASGI);
+                }
             } 
             else {
                 ((SymbolFunction) s).parList = at2.parList;
+                ArrayList<Symbol> parametros = ((SymbolFunction) s).parList;
+                for (int i = parametros.size() - 1; i >= 0; i--) {
+                    at.code.addInst(PCodeInstruction.OpCode.SRF, 0, parametros.get(i).dir);
+                    at.code.addInst(PCodeInstruction.OpCode.ASGI);
+                }
             }
+            at.code.addBlock(at2.code);
         }
     }
 }
@@ -254,7 +265,10 @@ void resto_declaracion_func_proc(Attributes at) :
     < tCP >
     < tAL >
     (declaracion_variables(at2) < tPC >)*
-    (instruccion(at3))+
+    (
+        instruccion(at3)
+        { at.code.addBlock(at3.code); }
+    )+
     < tCL >
     {
         st.removeBlock();
@@ -511,7 +525,7 @@ void expresion_simple(Attributes at) :
     { 
         sf.expresion_simple1(at, at1, at2);
         at.code.addBlock(at2.code);
-        if (at1.name.contentEquals("-")) {
+        if (at1.name != null && at1.name.contentEquals("-")) {
             at.code.addInst(PCodeInstruction.OpCode.NGI);
         }
     }
@@ -622,10 +636,7 @@ void primario(Attributes at) :
         at.code.addBlock(at1.code);
     }
 |   LOOKAHEAD(2) t = < tID > < tAP > lista_cero_o_mas_exps(at) < tCP >
-    { 
-        sf.invoc_func(t, at, st); 
-        // FIXME: at.code.addInst(PCodeInstruction.OpCode.OSF, ??, ??, ??);
-    }
+    { sf.invoc_func(t, at, st); }
 |   LOOKAHEAD(2) t = < tID > < tAC > expresion(at1) < tCC >
     { sf.comp_vector(t, at, at1, st); }
 |   t = < tID >
@@ -661,17 +672,9 @@ void asignable(Attributes at) :
 }
 {
     LOOKAHEAD(2) t = < tID > < tAC > expresion(at1) < tCC >
-    { 
-        sf.asignable_comp_vector(t, at, at1, st);
-        at.code.addBlock(at1.code);
-        // FIXME: at.code.addInst(PCodeInstruction.OpCode.SRF, ??, ??);
-        at.code.addInst(PCodeInstruction.OpCode.PLUS);
-    }
+    { sf.asignable_comp_vector(t, at, at1, st); }
 |   t = < tID >
-    { 
-        sf.asignable(t, at, st);
-        // FIXME: at.code.addInst(PCodeInstruction.OpCode.SRF, ??, ??);
-    }
+    { sf.asignable(t, at, st); }
 }
 
 void tipo(Attributes at) :
@@ -712,6 +715,7 @@ void inst_seleccion(Attributes at) :
     at2.name = at.name;
     at3.type = at.type;
     at3.name = at.name;
+    String label1, label2;
 }
 {
     < tIF >
@@ -722,8 +726,8 @@ void inst_seleccion(Attributes at) :
             errSem.deteccion("La condición de un 'if' debe ser tipo 'boolean'", at1);
         }
         at.code.addBlock(at1.code);
-        String label = CGUtils.newLabel();
-        at.code.addInst(PCodeInstruction.OpCode.JMF, label);
+        label1 = CGUtils.newLabel();
+        at.code.addInst(PCodeInstruction.OpCode.JMF, label1);
     }
     < tCP >
     < tAL > 
@@ -732,13 +736,18 @@ void inst_seleccion(Attributes at) :
         { at.code.addBlock(at2.code); }
     )* 
     < tCL >
+    {
+        label2 = CGUtils.newLabel();
+        at.code.addInst(PCodeInstruction.OpCode.JMP, label2);
+    }
     (
         bloque_else(at3)
         { 
-            at.code.addLabel(label); 
+            at.code.addLabel(label1); 
             at.code.addBlock(at3.code);
         }
     )?
+    { at.code.addLabel(label2); }
 }
 
 void bloque_else(Attributes at) :
@@ -750,10 +759,8 @@ void bloque_else(Attributes at) :
 {
     < tELSE > 
     < tAL > 
-    (
-        instruccion(at1)
-        { at.code.addBlock(at1.code); }
-    )*
+    (instruccion(at1))*
+    { at.code.addBlock(at1.code); }
     < tCL >
 }
 
