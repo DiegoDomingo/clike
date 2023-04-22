@@ -9,13 +9,13 @@
 
 package lib.tools;
 
-import java.security.KeyStore.Entry.Attribute;
 import java.util.*;
 import traductor.Token;
 import lib.attributes.*;
 import lib.symbolTable.*;
 import lib.symbolTable.exceptions.*;
 import lib.errores.*;
+import lib.codeGeneration.*;
 
 public class SemanticFunctions {
 
@@ -37,6 +37,8 @@ public class SemanticFunctions {
                                 at.type);
         }
         try {
+            CGUtils.memorySpaces[st.level]++;
+            s.dir = CGUtils.memorySpaces[st.level] + 2;
             st.insertSymbol(s);
         }
         catch (AlreadyDefinedSymbolException e){
@@ -70,6 +72,8 @@ public class SemanticFunctions {
             }
         }
         try {
+            CGUtils.memorySpaces[st.level]++;
+            s.dir = CGUtils.memorySpaces[st.level] + 2;
             st.insertSymbol(s);
         }
         catch (AlreadyDefinedSymbolException e) {
@@ -88,6 +92,7 @@ public class SemanticFunctions {
                 s = new SymbolFunction(t.image, at.parList, at1.type);
             }
             try {
+                s.label = CGUtils.newLabel();
                 st.insertSymbol(s);
                 at.nivel = s.nivel;
             }
@@ -95,6 +100,7 @@ public class SemanticFunctions {
                 errSem.deteccion(e, t);
             }
             st.insertBlock();
+            CGUtils.memorySpaces[st.level] = 0;
             at2.parList = at.parList;
             at2.type = at1.type;
         }
@@ -407,6 +413,8 @@ public class SemanticFunctions {
         at.beginLine = t.beginLine;
         at.beginColumn = t.beginColumn;
         at.name = t.image;
+        at.code.addInst(PCodeInstruction.OpCode.SRF, st.level - s.nivel, s.dir);
+        at.code.addInst(PCodeInstruction.OpCode.DRF);
     }
 
     public void const_int(Attributes at, Token t) {

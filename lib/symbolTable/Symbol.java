@@ -26,6 +26,8 @@ abstract public class Symbol implements Cloneable {
     public ParameterClass parClass; 
     //dirección en memoria. Para func/proc, dirección de la primera instrucción
     public long dir; 
+    // Etiqueta de salto para func/proc
+    public String label;
     //mi tipo
     public Types type;
     // es constante (En adac, siempre será FALSE)  

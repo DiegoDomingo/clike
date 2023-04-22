@@ -629,11 +629,7 @@ void primario(Attributes at) :
 |   LOOKAHEAD(2) t = < tID > < tAC > expresion(at1) < tCC >
     { sf.comp_vector(t, at, at1, st); }
 |   t = < tID >
-    { 
-        sf.identificador(t, at, st);
-        // FIXME: at.code.addInst(PCodeInstruction.OpCode.SRF, ??, ??);
-        at.code.addInst(PCodeInstruction.OpCode.DRF);
-    }
+    { sf.identificador(t, at, st); }
 |   t = < tCONST_INT >
     { 
         sf.const_int(at, t); 
@@ -652,7 +648,7 @@ void primario(Attributes at) :
         at.code.addInst(PCodeInstruction.OpCode.STC, 1);
     }
 |   t = < tFALSE >
-    { 
+    {
         sf.const_bool_true(t, at);
         at.code.addInst(PCodeInstruction.OpCode.STC, 0);
     }
@@ -703,8 +699,7 @@ void inst_invoc_proc(Attributes at) :
     lista_cero_o_mas_exps(at)
     < tCP >
     { 
-        sf.inst_invoc_proc(t, at, st);
-
+        sf.inst_invoc_proc(t, at, st); 
     }
 }
 
