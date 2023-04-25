@@ -152,6 +152,7 @@ void Programa(String out) :
 	(declaracion(at))+
     { 
         programa.addBlock(at.code);
+        programa.addInst(PCodeInstruction.OpCode.LVP);
         File f = new File(out);
         try {
             FileWriter writer = new FileWriter(f);
@@ -228,6 +229,7 @@ void declaracion_func_proc(Attributes at) :
     resto_declaracion_func_proc(at2)
     {
         if (!t.image.contentEquals("main")) {
+            st.removeBlock();
             if (at1.type == Symbol.Types.PROCEDURE) {
                 ((SymbolProcedure) s).parList = at2.parList;
                 ArrayList<Symbol> parametros = ((SymbolProcedure) s).parList;
@@ -244,6 +246,11 @@ void declaracion_func_proc(Attributes at) :
                     at.code.addInst(PCodeInstruction.OpCode.ASGI);
                 }
             }
+            at.code.addBlock(at2.code);
+            at.code.addInst(PCodeInstruction.OpCode.CSF);
+        }
+        else {
+            at.code.addLabel("L0");
             at.code.addBlock(at2.code);
         }
     }
@@ -267,13 +274,9 @@ void resto_declaracion_func_proc(Attributes at) :
     (declaracion_variables(at2) < tPC >)*
     (
         instruccion(at3)
-        { at.code.addBlock(at3.code); }
     )+
+    { at.code.addBlock(at3.code); }
     < tCL >
-    {
-        st.removeBlock();
-        at.code.addInst(PCodeInstruction.OpCode.CSF);
-    }
 }
 
 void parametro(Attributes at) :
@@ -355,6 +358,18 @@ void inst_escribir(Attributes at) :
             if (a.type == Symbol.Types.ARRAY || a.type == Symbol.Types.PROCEDURE) {
                 errSem.deteccion("No se puede mostrar un " + a.type.name(), a);
             }
+            else {
+                if (a.type == Symbol.Types.STRING) {
+                    for (int i = 0; i < a.name.length(); i++) {
+                        at.code.addInst(PCodeInstruction.OpCode.STC, (int) a.name.charAt(i));
+                        at.code.addInst(PCodeInstruction.OpCode.WRT, 0);
+                    }
+                }
+                else {
+                    at.code.addBlock(a.code);
+                    at.code.addInst(PCodeInstruction.OpCode.WRT, 1);
+                }
+            }
         }
     }
     < tCP >
@@ -373,7 +388,21 @@ void inst_escribir_linea(Attributes at) :
             if (a.type == Symbol.Types.ARRAY || a.type == Symbol.Types.PROCEDURE) {
                 errSem.deteccion("No se puede mostrar un " + a.type.name(), a);
             }
+            else {
+                if (a.type == Symbol.Types.STRING) {
+                    for (int i = 0; i < a.name.length(); i++) {
+                        at.code.addInst(PCodeInstruction.OpCode.STC, (int) a.name.charAt(i));
+                        at.code.addInst(PCodeInstruction.OpCode.WRT, 0);
+                    }
+                }
+                else {
+                    at.code.addBlock(a.code);
+                    at.code.addInst(PCodeInstruction.OpCode.WRT, 1);
+                }
+            }
         }
+        at.code.addInst(PCodeInstruction.OpCode.STC, 10);
+        at.code.addInst(PCodeInstruction.OpCode.WRT, 0);
     }
     < tCP >
 }
@@ -791,11 +820,9 @@ void inst_iteracion(Attributes at) :
     }
     < tCP >
     < tAL > 
-    (
-        instruccion(at2)
-        { at.code.addBlock(at2.code); }
-    )*
+    (instruccion(at2))*
     { 
+        at.code.addBlock(at2.code);
         at.code.addInst(PCodeInstruction.OpCode.JMP, label1);
         at.code.addLabel(label2);
     }
@@ -834,7 +861,7 @@ void lista_una_o_mas_exps(Attributes at) :
     expresion(at1)
     { 
         at.lExps.add(at1); 
-        // at.code.addBlock(at1.code);
+        at.code.addBlock(at1.code);
     }
     (
         < tC >
@@ -842,7 +869,7 @@ void lista_una_o_mas_exps(Attributes at) :
         expresion(at2)
         { 
             at.lExps.add(at2); 
-            // at.code.addBlock(at2.code);
+            at.code.addBlock(at2.code);
         }
     )*
 }
@@ -850,12 +877,29 @@ void lista_una_o_mas_exps(Attributes at) :
 void lista_cero_o_mas_asignables(Attributes at) :
 {
     Attributes at1 = new Attributes();
+    String label;
 }
 {
-    (lista_uno_o_mas_asignables(at1))?
+    (
+        lista_uno_o_mas_asignables(at1)
+        {
+            for (Attributes a : at1.lExps) {
+                at.code.addBlock(a.code); 
+            }
+        }
+    )?
     { 
         sf.lista_cero_o_mas_asignables(at, at1);
-        at.code.addBlock(at1.code);
+        label = CGUtils.newLabel();
+        at.code.addLabel(label);
+        CGUtils.memorySpaces[st.level]++;
+        at.code.addInst(PCodeInstruction.OpCode.SRF, 0, CGUtils.memorySpaces[st.level] + 2);
+        at.code.addInst(PCodeInstruction.OpCode.RD, 0);
+        at.code.addInst(PCodeInstruction.OpCode.STC, 10);
+        at.code.addInst(PCodeInstruction.OpCode.SRF, 0, CGUtils.memorySpaces[st.level] + 2);
+        at.code.addInst(PCodeInstruction.OpCode.DRF);
+        at.code.addInst(PCodeInstruction.OpCode.EQ);
+        at.code.addInst(PCodeInstruction.OpCode.JMF, label);
     }
 }
 
@@ -868,16 +912,18 @@ void lista_uno_o_mas_asignables(Attributes at) :
     asignable(at1)
     { 
         sf.lista_uno_o_mas_asignables(at, at1);
+        at1.code.addInst(PCodeInstruction.OpCode.RD, 1);
+        at.lExps.add(at1);
         at.code.addBlock(at1.code);
-        at.code.addInst(PCodeInstruction.OpCode.RD, 1);
     }
     (
         < tC >
         asignable(at2) 
         {
-            sf.lista_uno_o_mas_asignables(at, at2); 
-            at.code.addBlock(at2.code);
-            at.code.addInst(PCodeInstruction.OpCode.RD, 1);
+            sf.lista_uno_o_mas_asignables(at, at2);
+            at2.code.addInst(PCodeInstruction.OpCode.RD, 1);
+            at.lExps.add(at2);
+            at.code.addBlock(at1.code);
         }
     )*
 }

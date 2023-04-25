@@ -451,7 +451,7 @@ public class SemanticFunctions {
         at.valString = t.image;
         at.beginLine = t.beginLine;
         at.beginColumn = t.beginColumn;
-        at.name = t.image;
+        at.name = t.image.substring(1, t.image.length() - 1);
     }
 
     public void const_bool_true(Token t, Attributes at) {
