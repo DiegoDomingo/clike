@@ -31,14 +31,20 @@ public class SemanticFunctions {
             s = new SymbolArray(t1.image, 0, Integer.parseInt(t2.image)-1,
                                 at.type, at.parClass);
             at.parList.add(s);
-            s.dir = CGUtils.memorySpaces[st.level] + 3;
-            CGUtils.memorySpaces[st.level] = CGUtils.memorySpaces[st.level] + s.maxInd + 1;
+            if (s.parClass == Symbol.ParameterClass.REF) {
+                CGUtils.memorySpaces[st.level]++;
+                s.dir = CGUtils.memorySpaces[st.level] + 2;
+            }
+            else {
+                s.dir = CGUtils.memorySpaces[st.level] + 3;
+                CGUtils.memorySpaces[st.level] = CGUtils.memorySpaces[st.level] + s.maxInd + 1;
+            }
         }
         else {
             s = new SymbolArray(t1.image, 0, Integer.parseInt(t2.image)-1,
                                 at.type);
-            CGUtils.memorySpaces[st.level]++;
-            s.dir = CGUtils.memorySpaces[st.level] + 2;
+            s.dir = CGUtils.memorySpaces[st.level] + 3;
+            CGUtils.memorySpaces[st.level] = CGUtils.memorySpaces[st.level] + s.maxInd + 1;
         }
         try {
             
@@ -152,6 +158,7 @@ public class SemanticFunctions {
         at.isVar = at1.isVar;
         at.isConst = at1.isConst;
         at.baseType = at1.baseType;
+        at.nivel = at1.nivel;
 	}
 
 	public void relacion1(Attributes at, Attributes at1, Attributes at2) {
@@ -165,6 +172,7 @@ public class SemanticFunctions {
         at.isVar = at1.isVar;
         at.isConst = at1.isConst;
         at.baseType = at1.baseType;
+        at.nivel = at1.nivel;
 	}
 
 	public void relacion2(Attributes at, Attributes at1, Attributes at2, Attributes at3) {
@@ -182,6 +190,7 @@ public class SemanticFunctions {
 		at.isVar = at3.isVar;
 		at.isConst = at3.isConst;
 		at.baseType = at3.baseType;
+        at.nivel = at3.nivel;
 	}
 
 	public void expresion_simple1(Attributes at, Attributes at1, Attributes at2) {
@@ -197,6 +206,7 @@ public class SemanticFunctions {
         at.isVar = at2.isVar;
         at.isConst = at2.isConst;
         at.baseType = at2.baseType;
+        at.nivel = at2.nivel;
 	}
 
 	public void expresion_simple2(Attributes at, Attributes at2, Attributes at4) {
@@ -210,6 +220,7 @@ public class SemanticFunctions {
 			at.isVar = at4.isVar;
 			at.isConst = at4.isConst;
 			at.baseType = at4.baseType;
+            at.nivel = at4.nivel;
 		}
 		else {
 			if (at2.type != Symbol.Types.INT) {
@@ -232,6 +243,7 @@ public class SemanticFunctions {
         at.isVar = at1.isVar;
         at.isConst = at1.isConst;
         at.baseType = at1.baseType;
+        at.nivel = at1.nivel;
     }
 
     public void termino2(Attributes at, Attributes at1, Attributes at3) {
@@ -245,6 +257,7 @@ public class SemanticFunctions {
             at.isVar = at3.isVar;
             at.isConst = at3.isConst;
             at.baseType = at3.baseType;
+            at.nivel = at3.nivel;
         }
         else {
             if (at1.type != Symbol.Types.INT) {
@@ -267,6 +280,7 @@ public class SemanticFunctions {
         at.isVar = at1.isVar;
         at.isConst = at1.isConst;
         at.baseType = at1.baseType;
+        at.nivel = at1.nivel;
     }
 
     public void factor2(Attributes at, Attributes at1) {
@@ -285,6 +299,7 @@ public class SemanticFunctions {
         at.isVar = at1.isVar;
         at.isConst = at1.isConst;
         at.baseType = at1.baseType;
+        at.nivel = at1.nivel;
     }
 
     public void primario(Attributes at, Attributes at1){
@@ -297,6 +312,7 @@ public class SemanticFunctions {
         at.isVar = at1.isVar;
         at.isConst = at1.isConst;
         at.baseType = at1.baseType;
+        at.nivel = at1.nivel;
     }
 
     public void int2char(Attributes at, Attributes at1) {
@@ -315,6 +331,7 @@ public class SemanticFunctions {
         at.isVar = at1.isVar;
         at.isConst = at1.isConst;
         at.baseType = at1.baseType;
+        at.nivel = at1.nivel;
     }
 
     public void char2int(Attributes at, Attributes at1) {
@@ -333,6 +350,7 @@ public class SemanticFunctions {
         at.isVar = at1.isVar;
         at.isConst = at1.isConst;
         at.baseType = at1.baseType;
+        at.nivel = at1.nivel;
     }
 
     public void invoc_func(Token t, Attributes at, SymbolTable st) {
@@ -351,16 +369,16 @@ public class SemanticFunctions {
                 }
                 else {
                     for (int i = 0; i < at.lExps.size() && i < parametros.size(); i++) {
+                        if (parametros.get(i).parClass == Symbol.ParameterClass.REF) {
+                            if (!at.lExps.get(i).isVar && !at.lExps.get(i).isCompVector) {
+                                errSem.deteccion("El parámetro real para un paso por referencia tiene que ser un asignable", t);
+                            }
+                            at.lExps.get(i).code.removeLastInst();
+                        }
                         if (at.lExps.get(i).type != parametros.get(i).type) {
                             errSem.deteccion("Incompatibilidad de tipos entre parámetro formal y real", t);
                         }
                         else {
-                            if (parametros.get(i).parClass == Symbol.ParameterClass.REF) {
-                                if (!at.lExps.get(i).isVar && !at.lExps.get(i).isCompVector) {
-                                    errSem.deteccion("El parámetro real para un paso por referencia tiene que ser un asignable", t);
-                                }
-                                at.lExps.get(i).code.removeLastInst();
-                            }
                             if (parametros.get(i).type == Symbol.Types.ARRAY) {
                                 if (((SymbolArray) parametros.get(i)).baseType != at.lExps.get(i).baseType) {
                                     errSem.deteccion("Incompatibilidad de tipos entre parámetro formal y real", t);
@@ -368,8 +386,20 @@ public class SemanticFunctions {
                                 if (((SymbolArray) parametros.get(i)).maxInd+1 != at.lExps.get(i).arraySize) {
                                     errSem.deteccion("El parámetro real tiene que ser un vector compatible con el formal", t);
                                 }
+                                if (parametros.get(i).parClass == Symbol.ParameterClass.VAL) {
+                                    int maxInd = ((SymbolArray) parametros.get(i)).maxInd;
+                                    for (int j = 0; j <= maxInd; j++) {
+                                        at.code.addInst(PCodeInstruction.OpCode.SRF, st.level - at.lExps.get(i).nivel, parametros.get(i).dir + j);
+                                        at.code.addInst(PCodeInstruction.OpCode.DRF);
+                                    }
+                                }
+                                else {
+                                    at.code.addBlock(at.lExps.get(i).code);
+                                }
                             }
-                            at.code.addBlock(at.lExps.get(i).code);
+                            else {
+                                at.code.addBlock(at.lExps.get(i).code);
+                            }
                         }
                     }
                 }
@@ -399,8 +429,12 @@ public class SemanticFunctions {
         at.type = ((SymbolArray) s).baseType;
         at.beginLine = t.beginLine;
         at.beginColumn = t.beginColumn;
+        at.nivel = s.nivel;
         at.code.addBlock(at1.code);
         at.code.addInst(PCodeInstruction.OpCode.SRF, st.level - s.nivel, s.dir);
+        if (s.parClass == Symbol.ParameterClass.REF) {
+            at.code.addInst(PCodeInstruction.OpCode.DRF);
+        }
         at.code.addInst(PCodeInstruction.OpCode.PLUS);
         at.code.addInst(PCodeInstruction.OpCode.DRF);
     }
@@ -424,8 +458,12 @@ public class SemanticFunctions {
         at.beginLine = t.beginLine;
         at.beginColumn = t.beginColumn;
         at.name = t.image;
+        at.nivel = s.nivel;
         at.code.addInst(PCodeInstruction.OpCode.SRF, st.level - s.nivel, s.dir);
         at.code.addInst(PCodeInstruction.OpCode.DRF);
+        if (s.parClass == Symbol.ParameterClass.REF) {
+            at.code.addInst(PCodeInstruction.OpCode.DRF);
+        }
     }
 
     public void const_int(Attributes at, Token t) {
@@ -444,7 +482,7 @@ public class SemanticFunctions {
         at.isVar = false;
         at.isCompVector = false;
         at.isConst = true;
-        at.valChar = t.image.charAt(0);
+        at.valChar = t.image.charAt(1);
         at.beginLine = t.beginLine;
         at.beginColumn = t.beginColumn;
         at.name = t.image;
@@ -504,6 +542,9 @@ public class SemanticFunctions {
         at.nivel = st.level - s.nivel;
         at.code.addBlock(at1.code);
         at.code.addInst(PCodeInstruction.OpCode.SRF, st.level - s.nivel, s.dir);
+        if (s.parClass == Symbol.ParameterClass.REF) {
+            at.code.addInst(PCodeInstruction.OpCode.DRF);
+        }
         at.code.addInst(PCodeInstruction.OpCode.PLUS);
     }
 
@@ -525,6 +566,9 @@ public class SemanticFunctions {
         at.beginLine = t.beginLine;
         at.beginColumn = t.beginColumn;
         at.code.addInst(PCodeInstruction.OpCode.SRF, st.level - s.nivel, s.dir);
+        if (s.parClass == Symbol.ParameterClass.REF) {
+            at.code.addInst(PCodeInstruction.OpCode.DRF);
+        }
     }
 
     public void inst_invoc_proc(Token t, Attributes at, SymbolTable st) {
@@ -544,16 +588,16 @@ public class SemanticFunctions {
         }
         else {
             for (int i = 0; i < at.lExps.size() && i < parametros.size(); i++) {
+                if (parametros.get(i).parClass == Symbol.ParameterClass.REF) {
+                    if (!at.lExps.get(i).isVar && !at.lExps.get(i).isCompVector) {
+                        errSem.deteccion("El parámetro real para un paso por referencia tiene que ser un asignable", t);
+                    }
+                    at.lExps.get(i).code.removeLastInst();
+                }
                 if (at.lExps.get(i).type != parametros.get(i).type) {
                     errSem.deteccion("Incompatibilidad de tipos entre parámetro formal y real", t);
                 }
                 else {
-                    if (parametros.get(i).parClass == Symbol.ParameterClass.REF) {
-                        if (!at.lExps.get(i).isVar && !at.lExps.get(i).isCompVector) {
-                            errSem.deteccion("El parámetro real para un paso por referencia tiene que ser un asignable", t);
-                        }
-                        at.lExps.get(i).code.removeLastInst();
-                    }
                     if (parametros.get(i).type == Symbol.Types.ARRAY) {
                         if (((SymbolArray) parametros.get(i)).baseType != at.lExps.get(i).baseType) {
                             errSem.deteccion("Incompatibilidad de tipos entre parámetro formal y real", t);
@@ -561,8 +605,20 @@ public class SemanticFunctions {
                         if (((SymbolArray) parametros.get(i)).maxInd+1 != at.lExps.get(i).arraySize) {
                             errSem.deteccion("El parámetro real tiene que ser un vector compatible con el formal", t);
                         }
+                        if (parametros.get(i).parClass == Symbol.ParameterClass.VAL) {
+                            int maxInd = ((SymbolArray) parametros.get(i)).maxInd;
+                            for (int j = 0; j <= maxInd; j++) {
+                                at.code.addInst(PCodeInstruction.OpCode.SRF, st.level - at.lExps.get(i).nivel, parametros.get(i).dir + j);
+                                at.code.addInst(PCodeInstruction.OpCode.DRF);
+                            }
+                        }
+                        else {
+                            at.code.addBlock(at.lExps.get(i).code);
+                        }
                     }
-                    at.code.addBlock(at.lExps.get(i).code);
+                    else {
+                        at.code.addBlock(at.lExps.get(i).code);
+                    }
                 }
             }
             at.code.addOSFInst(CGUtils.memorySpaces[st.level] + 3, st.level - s.nivel, s.label);

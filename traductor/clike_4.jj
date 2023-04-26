@@ -234,7 +234,7 @@ void declaracion_func_proc(Attributes at) :
                 ((SymbolProcedure) s).parList = at2.parList;
                 ArrayList<Symbol> parametros = ((SymbolProcedure) s).parList;
                 for (int i = parametros.size() - 1; i >= 0; i--) {
-                    if (parametros.get(i).type == Symbol.Types.ARRAY) {
+                    if (parametros.get(i).type == Symbol.Types.ARRAY && parametros.get(i).parClass == Symbol.ParameterClass.VAL) {
                         int maxInd = ((SymbolArray) parametros.get(i)).maxInd;
                         for (int j = maxInd; j >= 0; j--) {
                             at.code.addInst(PCodeInstruction.OpCode.SRF, 0, parametros.get(i).dir + j);
@@ -251,7 +251,7 @@ void declaracion_func_proc(Attributes at) :
                 ((SymbolFunction) s).parList = at2.parList;
                 ArrayList<Symbol> parametros = ((SymbolFunction) s).parList;
                 for (int i = parametros.size() - 1; i >= 0; i--) {
-                    if (parametros.get(i).type == Symbol.Types.ARRAY) {
+                    if (parametros.get(i).type == Symbol.Types.ARRAY && parametros.get(i).parClass == Symbol.ParameterClass.VAL) {
                         int maxInd = ((SymbolArray) parametros.get(i)).maxInd;
                         for (int j = maxInd; j >= 0; j--) {
                             at.code.addInst(PCodeInstruction.OpCode.SRF, 0, parametros.get(i).dir + j);
