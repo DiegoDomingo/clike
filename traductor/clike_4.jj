@@ -234,16 +234,34 @@ void declaracion_func_proc(Attributes at) :
                 ((SymbolProcedure) s).parList = at2.parList;
                 ArrayList<Symbol> parametros = ((SymbolProcedure) s).parList;
                 for (int i = parametros.size() - 1; i >= 0; i--) {
-                    at.code.addInst(PCodeInstruction.OpCode.SRF, 0, parametros.get(i).dir);
-                    at.code.addInst(PCodeInstruction.OpCode.ASGI);
+                    if (parametros.get(i).type == Symbol.Types.ARRAY) {
+                        int maxInd = ((SymbolArray) parametros.get(i)).maxInd;
+                        for (int j = maxInd; j >= 0; j--) {
+                            at.code.addInst(PCodeInstruction.OpCode.SRF, 0, parametros.get(i).dir + j);
+                            at.code.addInst(PCodeInstruction.OpCode.ASGI);
+                        }
+                    }
+                    else {
+                        at.code.addInst(PCodeInstruction.OpCode.SRF, 0, parametros.get(i).dir);
+                        at.code.addInst(PCodeInstruction.OpCode.ASGI);
+                    }
                 }
             } 
             else {
                 ((SymbolFunction) s).parList = at2.parList;
                 ArrayList<Symbol> parametros = ((SymbolFunction) s).parList;
                 for (int i = parametros.size() - 1; i >= 0; i--) {
-                    at.code.addInst(PCodeInstruction.OpCode.SRF, 0, parametros.get(i).dir);
-                    at.code.addInst(PCodeInstruction.OpCode.ASGI);
+                    if (parametros.get(i).type == Symbol.Types.ARRAY) {
+                        int maxInd = ((SymbolArray) parametros.get(i)).maxInd;
+                        for (int j = maxInd; j >= 0; j--) {
+                            at.code.addInst(PCodeInstruction.OpCode.SRF, 0, parametros.get(i).dir + j);
+                            at.code.addInst(PCodeInstruction.OpCode.ASGI);
+                        }
+                    }
+                    else {
+                        at.code.addInst(PCodeInstruction.OpCode.SRF, 0, parametros.get(i).dir);
+                        at.code.addInst(PCodeInstruction.OpCode.ASGI);
+                    }
                 }
             }
             at.code.addBlock(at2.code);
@@ -760,19 +778,17 @@ void inst_seleccion(Attributes at) :
     }
     < tCP >
     < tAL > 
-    (
-        instruccion(at2)
-        { at.code.addBlock(at2.code); }
-    )* 
+    (instruccion(at2))* 
+    { at.code.addBlock(at2.code); }
     < tCL >
     {
         label2 = CGUtils.newLabel();
         at.code.addInst(PCodeInstruction.OpCode.JMP, label2);
+        at.code.addLabel(label1); 
     }
     (
         bloque_else(at3)
         { 
-            at.code.addLabel(label1); 
             at.code.addBlock(at3.code);
         }
     )?

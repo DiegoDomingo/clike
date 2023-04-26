@@ -26,19 +26,22 @@ public class SemanticFunctions {
 	}
 
 	public void variable_array(Token t1, Token t2, Attributes at, SymbolTable st) {
-		Symbol s = null;
+		SymbolArray s = null;
         if (at.parClass == Symbol.ParameterClass.VAL || at.parClass == Symbol.ParameterClass.REF) {
             s = new SymbolArray(t1.image, 0, Integer.parseInt(t2.image)-1,
                                 at.type, at.parClass);
             at.parList.add(s);
+            s.dir = CGUtils.memorySpaces[st.level] + 3;
+            CGUtils.memorySpaces[st.level] = CGUtils.memorySpaces[st.level] + s.maxInd + 1;
         }
         else {
             s = new SymbolArray(t1.image, 0, Integer.parseInt(t2.image)-1,
                                 at.type);
-        }
-        try {
             CGUtils.memorySpaces[st.level]++;
             s.dir = CGUtils.memorySpaces[st.level] + 2;
+        }
+        try {
+            
             st.insertSymbol(s);
         }
         catch (AlreadyDefinedSymbolException e){
@@ -396,6 +399,10 @@ public class SemanticFunctions {
         at.type = ((SymbolArray) s).baseType;
         at.beginLine = t.beginLine;
         at.beginColumn = t.beginColumn;
+        at.code.addBlock(at1.code);
+        at.code.addInst(PCodeInstruction.OpCode.SRF, st.level - s.nivel, s.dir);
+        at.code.addInst(PCodeInstruction.OpCode.PLUS);
+        at.code.addInst(PCodeInstruction.OpCode.DRF);
     }
 
     public void identificador(Token t, Attributes at, SymbolTable st) {
