@@ -33,6 +33,7 @@ public class Attributes implements Cloneable {
     public boolean isConst;
     public int arraySize;
     public int nivel;
+    public int dir;
 
     public int beginLine;
     public int beginColumn;

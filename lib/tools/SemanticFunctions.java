@@ -159,6 +159,8 @@ public class SemanticFunctions {
         at.isConst = at1.isConst;
         at.baseType = at1.baseType;
         at.nivel = at1.nivel;
+        at.dir = at1.dir;
+        at.parClass = at1.parClass;
 	}
 
 	public void relacion1(Attributes at, Attributes at1, Attributes at2) {
@@ -173,6 +175,8 @@ public class SemanticFunctions {
         at.isConst = at1.isConst;
         at.baseType = at1.baseType;
         at.nivel = at1.nivel;
+        at.dir = at1.dir;
+        at.parClass = at1.parClass;
 	}
 
 	public void relacion2(Attributes at, Attributes at1, Attributes at2, Attributes at3) {
@@ -191,6 +195,8 @@ public class SemanticFunctions {
 		at.isConst = at3.isConst;
 		at.baseType = at3.baseType;
         at.nivel = at3.nivel;
+        at.dir = at3.dir;
+        at.parClass = at3.parClass;
 	}
 
 	public void expresion_simple1(Attributes at, Attributes at1, Attributes at2) {
@@ -207,6 +213,8 @@ public class SemanticFunctions {
         at.isConst = at2.isConst;
         at.baseType = at2.baseType;
         at.nivel = at2.nivel;
+        at.dir = at2.dir;
+        at.parClass = at2.parClass;
 	}
 
 	public void expresion_simple2(Attributes at, Attributes at2, Attributes at4) {
@@ -221,6 +229,8 @@ public class SemanticFunctions {
 			at.isConst = at4.isConst;
 			at.baseType = at4.baseType;
             at.nivel = at4.nivel;
+            at.dir = at4.dir;
+            at.parClass = at4.parClass;
 		}
 		else {
 			if (at2.type != Symbol.Types.INT) {
@@ -244,6 +254,8 @@ public class SemanticFunctions {
         at.isConst = at1.isConst;
         at.baseType = at1.baseType;
         at.nivel = at1.nivel;
+        at.dir = at1.dir;
+        at.parClass = at1.parClass;
     }
 
     public void termino2(Attributes at, Attributes at1, Attributes at3) {
@@ -258,6 +270,8 @@ public class SemanticFunctions {
             at.isConst = at3.isConst;
             at.baseType = at3.baseType;
             at.nivel = at3.nivel;
+            at.dir = at3.dir;
+            at.parClass = at3.parClass;
         }
         else {
             if (at1.type != Symbol.Types.INT) {
@@ -281,6 +295,8 @@ public class SemanticFunctions {
         at.isConst = at1.isConst;
         at.baseType = at1.baseType;
         at.nivel = at1.nivel;
+        at.dir = at1.dir;
+        at.parClass = at1.parClass;
     }
 
     public void factor2(Attributes at, Attributes at1) {
@@ -300,6 +316,8 @@ public class SemanticFunctions {
         at.isConst = at1.isConst;
         at.baseType = at1.baseType;
         at.nivel = at1.nivel;
+        at.dir = at1.dir;
+        at.parClass = at1.parClass;
     }
 
     public void primario(Attributes at, Attributes at1){
@@ -313,6 +331,8 @@ public class SemanticFunctions {
         at.isConst = at1.isConst;
         at.baseType = at1.baseType;
         at.nivel = at1.nivel;
+        at.dir = at1.dir;
+        at.parClass = at1.parClass;
     }
 
     public void int2char(Attributes at, Attributes at1) {
@@ -332,6 +352,8 @@ public class SemanticFunctions {
         at.isConst = at1.isConst;
         at.baseType = at1.baseType;
         at.nivel = at1.nivel;
+        at.dir = at1.dir;        
+        at.parClass = at1.parClass;
     }
 
     public void char2int(Attributes at, Attributes at1) {
@@ -351,6 +373,8 @@ public class SemanticFunctions {
         at.isConst = at1.isConst;
         at.baseType = at1.baseType;
         at.nivel = at1.nivel;
+        at.dir = at1.dir;
+        at.parClass = at1.parClass;
     }
 
     public void invoc_func(Token t, Attributes at, SymbolTable st) {
@@ -388,9 +412,20 @@ public class SemanticFunctions {
                                 }
                                 if (parametros.get(i).parClass == Symbol.ParameterClass.VAL) {
                                     int maxInd = ((SymbolArray) parametros.get(i)).maxInd;
-                                    for (int j = 0; j <= maxInd; j++) {
-                                        at.code.addInst(PCodeInstruction.OpCode.SRF, st.level - at.lExps.get(i).nivel, parametros.get(i).dir + j);
-                                        at.code.addInst(PCodeInstruction.OpCode.DRF);
+                                    if (at.lExps.get(i).parClass == Symbol.ParameterClass.REF) {
+                                        for (int j = 0; j <= maxInd; j++) {
+                                            at.code.addInst(PCodeInstruction.OpCode.SRF, st.level - at.lExps.get(i).nivel, at.lExps.get(i).dir);
+                                            at.code.addInst(PCodeInstruction.OpCode.DRF);
+                                            at.code.addInst(PCodeInstruction.OpCode.STC, j);
+                                            at.code.addInst(PCodeInstruction.OpCode.PLUS);
+                                            at.code.addInst(PCodeInstruction.OpCode.DRF);
+                                        }
+                                    }
+                                    else {
+                                        for (int j = 0; j <= maxInd; j++) {
+                                            at.code.addInst(PCodeInstruction.OpCode.SRF, st.level - at.lExps.get(i).nivel, at.lExps.get(i).dir + j);
+                                            at.code.addInst(PCodeInstruction.OpCode.DRF);
+                                        }
                                     }
                                 }
                                 else {
@@ -430,6 +465,8 @@ public class SemanticFunctions {
         at.beginLine = t.beginLine;
         at.beginColumn = t.beginColumn;
         at.nivel = s.nivel;
+        at.dir = s.dir;
+        at.parClass = s.parClass;
         at.code.addBlock(at1.code);
         at.code.addInst(PCodeInstruction.OpCode.SRF, st.level - s.nivel, s.dir);
         if (s.parClass == Symbol.ParameterClass.REF) {
@@ -459,6 +496,8 @@ public class SemanticFunctions {
         at.beginColumn = t.beginColumn;
         at.name = t.image;
         at.nivel = s.nivel;
+        at.dir = s.dir;
+        at.parClass = s.parClass;
         at.code.addInst(PCodeInstruction.OpCode.SRF, st.level - s.nivel, s.dir);
         at.code.addInst(PCodeInstruction.OpCode.DRF);
         if (s.parClass == Symbol.ParameterClass.REF) {
@@ -607,9 +646,20 @@ public class SemanticFunctions {
                         }
                         if (parametros.get(i).parClass == Symbol.ParameterClass.VAL) {
                             int maxInd = ((SymbolArray) parametros.get(i)).maxInd;
-                            for (int j = 0; j <= maxInd; j++) {
-                                at.code.addInst(PCodeInstruction.OpCode.SRF, st.level - at.lExps.get(i).nivel, parametros.get(i).dir + j);
-                                at.code.addInst(PCodeInstruction.OpCode.DRF);
+                            if (at.lExps.get(i).parClass == Symbol.ParameterClass.REF) {
+                                for (int j = 0; j <= maxInd; j++) {
+                                    at.code.addInst(PCodeInstruction.OpCode.SRF, st.level - at.lExps.get(i).nivel, at.lExps.get(i).dir);
+                                    at.code.addInst(PCodeInstruction.OpCode.DRF);
+                                    at.code.addInst(PCodeInstruction.OpCode.STC, j);
+                                    at.code.addInst(PCodeInstruction.OpCode.PLUS);
+                                    at.code.addInst(PCodeInstruction.OpCode.DRF);
+                                }
+                            }
+                            else {
+                                for (int j = 0; j <= maxInd; j++) {
+                                    at.code.addInst(PCodeInstruction.OpCode.SRF, st.level - at.lExps.get(i).nivel, at.lExps.get(i).dir + j);
+                                    at.code.addInst(PCodeInstruction.OpCode.DRF);
+                                }
                             }
                         }
                         else {

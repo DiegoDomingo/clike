@@ -1,13 +1,13 @@
 Compilador clike_4.jar (V1.0)
 Autores: Pablo Cervera López (815538)
          Diego Domingo Ralla (818637)
--------------------------------------------------------------
-Análisis léxico, sintáctico y semántico
+--------------------------------------------------------------------------------
+Análisis léxico, sintáctico, semántico y generación de código
 
 Invocar como:
--------------------------------------------------------------
-java -jar clike_4.jar <fichero_fuente_clike>
--------------------------------------------------------------
+--------------------------------------------------------------------------------
+java -jar clike_4.jar <fichero_fuente_clike> <fichero_salida_pcode>
+--------------------------------------------------------------------------------
 
 Si se invoca sin parámetros, lee la entrada estándar.
 
@@ -21,7 +21,7 @@ Características generales:
    func/proc: primero las declaraciones de variables, luego las instrucciones
 
 Decisiones de diseño análisis sintáctico:
--------------------------------------------------------------
+--------------------------------------------------------------------------------
 Se ha partido de la gramática parcial para clike proporcionada, que ha sido
 adaptada añadiendo las producciones que se han considerado necesarias. Algunas
 decisiones de diseño han sido:
@@ -39,7 +39,7 @@ decisiones de diseño han sido:
   se ha tratado con una producción específica para este.
 
 Lenguaje aceptado semánticamente:
--------------------------------------------------------------
+--------------------------------------------------------------------------------
 El lenguaje permite el uso de parámetros escalares y de vectores, tanto por
 valor como por referencia en procedimientos y funciones.
 
@@ -58,3 +58,22 @@ En el directorio lib se han incluido las siguientes clases:
 
 Al ejecutar el programa clike se mostrará el contenido de la tabla de símbolos
 al procesar cada uno de los procedimientos y funciones del programa.
+
+Generación de código:
+--------------------------------------------------------------------------------
+Como principal optimización realizada, destaca la eliminación de saltos
+incondicionales innecesarios (principalmente aquellos que suponen un salto a la
+que es la siguiente instrucción).
+
+En el directorio lib/tools se ha incluido el paquete codeGeneration, que incluye
+las siguientes clases:
+- Clase CGUtils: lleva la cuenta de las etiquetas creadas, así como del tamaño
+  ocupado por cada bloque.
+- Clase CodeBlock: representa un bloque de código.
+- Clase Comment: permite añadir comentarios en el fichero .pcode para el proceso 
+  de depuración.
+- Clase Label: etiqueta para realizar un salto.
+- Clase PCodeInstruction: incluye las distintas instrucciones de la máquina p
+- Clase XMLTag: no utilizada, representa una etiqueta XML.
+- Clase abstracta CodeElement: representa cualquier elemento de código
+  (comentarios, etiquetas, instrucciones y etiquetas XML).
